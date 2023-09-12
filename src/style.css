@@ -4,6 +4,11 @@ html, body, ul, li, ol, dl, dd, dt, p, h1, h2, h3, h4, h5, h6, form, fieldset, l
     padding: 0;
 }
 
+body{
+  width: 100%;
+  height: 100vh;
+}
+
 fieldset, img, input, button {             
     border: none;
     padding: 0;
@@ -18,7 +23,7 @@ ul, ol {
 input {
     padding-top: 0;
     padding-bottom: 0;
-    font-family: "SimSun", "宋体";
+    font-family: "微软雅黑", "SimSun";
 }
 
 select, input {
@@ -47,7 +52,7 @@ table {
 
 
 body {
-    font: 12px/150% Arial, Verdana, "\5b8b\4f53";    
+    font: "微软雅黑", "SimSun";    
     color: #666;
     background: #fff
 }
