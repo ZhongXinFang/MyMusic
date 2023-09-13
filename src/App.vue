@@ -1,24 +1,36 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-let ioShow = ref(false)
+let ioShow = ref(true)
 const IoCurrMouseenterEvent = () => {
   ioShow.value = true
-  if(ioCurrMouseoutTimer !== null){
+  if (ioCurrMouseoutTimer !== null) {
     clearTimeout(ioCurrMouseoutTimer)
   }
-  console.log('鼠标进入了 io-curr 区域',ioShow.value)
+  console.log('鼠标进入了 io-curr 区域', ioShow.value)
 }
 
 // 鼠标离开 io-curr 区域时。用于隐藏 io 控制台的定时器
 let ioCurrMouseoutTimer: any | null = null
 const IoCurrMouseleavetEvent = () => {
-  if(ioCurrMouseoutTimer !== null){
+  if (ioCurrMouseoutTimer !== null) {
     clearTimeout(ioCurrMouseoutTimer)
   }
+  console.log('鼠标离开了 io-curr 区域', ioShow.value)
   ioCurrMouseoutTimer = setTimeout(() => {
     ioShow.value = false
-    console.log('鼠标离开了 io-curr 区域',ioShow.value)
   }, 5000)
+}
+
+// 是否展开进度条
+let oterBarShow = ref(true)
+const IoCurrBarMouseenterEvent = () => {
+  console.log('鼠标离开了 io-curr-bar 区域')
+  oterBarShow.value = false
+}
+
+const IoCurrbarMouseenterEvent = () => {
+  console.log('鼠标进入了 io-curr-bar 区域')
+  oterBarShow.value = true
 }
 
 </script>
@@ -37,7 +49,6 @@ const IoCurrMouseleavetEvent = () => {
         <span>作词</span>
         <span>专辑</span>
         <span>发布日期</span>
-        <span>{{ioShow}}</span>
       </div>
     </div>
     <div class="lyric-coontent">
@@ -47,7 +58,7 @@ const IoCurrMouseleavetEvent = () => {
       </div>
       <!-- 歌词区域 -->
       <div class="lyric">
-        <ul>
+        <ul class="lyric-item-box">
           <li>周杰伦 - 听妈妈的话 </li>
           <li>作词：周杰伦 </li>
           <li>作曲：周杰伦 </li>
@@ -91,47 +102,51 @@ const IoCurrMouseleavetEvent = () => {
         </ul>
       </div>
     </div>
-    <div class="io" :class="{'io-show': ioShow,'io-hide': !ioShow}" 
-    @mouseleave = "IoCurrMouseleavetEvent"
-    @mouseenter="IoCurrMouseenterEvent">
-      <div class="oter-bar-box">
-        <div class="oter-bar">
-
+    <div class="io-box" :class="{ 'io-show': ioShow, 'io-hide': !ioShow }" @mouseleave="IoCurrMouseleavetEvent"
+      @mouseenter="IoCurrMouseenterEvent">
+      <div class="oter-bar-box oter-bar-box-default" @mouseleave="IoCurrBarMouseenterEvent"
+        @mouseenter="IoCurrbarMouseenterEvent">
+        <div class="oter-bar" :class="{ 'oter-bar-show': oterBarShow, 'oter-bar-default': !oterBarShow }">
+          <div class="bar-item">
+            <div class="bar-item-pus bar-item-pus-animate" :class="{ 'bar-item-pus-show': oterBarShow, 'bar-item-pus-default': !oterBarShow }"></div>
+          </div>
         </div>
       </div>
-      <div class="io-play-img-box">
-        <img src="./assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
-      </div>
-      <div class="io-play-info-box">
-        <span class="io-play-info-lyric">我却靠在墙壁背我的ABC</span>
-        <span class="io-play-info-title">听妈妈的话 - 周杰伦</span>
-      </div>
-      <div class="io-play-box">
-        <span>
-          <img src="./assets/icon/back.svg" alt="">
-        </span>
-        <span id="io-play">
-          <img src="./assets/icon/play.svg" alt="">
-        </span>
-        <span>
-          <img src="./assets/icon/next.svg" alt="">
-        </span>
-      </div>
-      <div class="io-play-right-oper">
-        <span>
-          <img src="./assets/icon/download.svg" alt="">
-        </span>
-        <span>
-          <img src="./assets/icon/playMode-List.svg" alt="">
-        </span>
-        <span>
-          <img src="./assets/icon/volume.svg" alt="">
-        </span>
-        <span id="io-play-time">
-          <span>03:23</span>
-          <span>/</span>
-          <span>05:11</span>
-        </span>
+      <div class="io">
+        <div class="io-play-img-box">
+          <img class="io-play-img" src="./assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
+        </div>
+        <div class="io-play-info-box">
+          <span class="io-play-info-lyric">我却靠在墙壁背我的ABC</span>
+          <span class="io-play-info-title">听妈妈的话 - 周杰伦</span>
+        </div>
+        <div class="io-play-box">
+          <span>
+            <img src="./assets/icon/back.svg" alt="">
+          </span>
+          <span id="io-play">
+            <img src="./assets/icon/play.svg" alt="">
+          </span>
+          <span>
+            <img src="./assets/icon/next.svg" alt="">
+          </span>
+        </div>
+        <div class="io-play-right-oper">
+          <span>
+            <img src="./assets/icon/download.svg" alt="">
+          </span>
+          <span>
+            <img src="./assets/icon/playMode-List.svg" alt="">
+          </span>
+          <span>
+            <img src="./assets/icon/volume.svg" alt="">
+          </span>
+          <span id="io-play-time">
+            <span>03:23</span>
+            <span>/</span>
+            <span>05:11</span>
+          </span>
+        </div>
       </div>
     </div>
     <!-- io 的鼠标移动区域，现在用于实现当鼠标移动到此区域时，控制台显示出来，否则就隐藏 -->
@@ -140,19 +155,91 @@ const IoCurrMouseleavetEvent = () => {
 </template>
 
 <style scoped>
-.oter-bar{
-  width: 80%;
-  height: 1.52px;
-  background-color: rgba(255, 255, 255, 0.5);
-  margin-inline: auto;
+.lyric-item-box>*{
+  user-select: text;
+}
+.lyric-item-box>*::selection {
+    color: #FF7F50;
+    background-color: #00000000;
 }
 
-.oter-bar-box{
+.io-play-img:hover{
+  filter: contrast(1.18);
+}
+.io-play-img{
   width: 100%;
-  height: 1.53px;
+  height: 100%;
+  transition: 0.378s;
+  cursor: pointer;
+}
+
+@keyframes myfr 
+{
+     0% { filter: brightness(1.00); }
+     100% { filter: brightness(1.22) drop-shadow(0 0 2.1px rgba(255, 255, 255, 0.85)); }
+}
+
+.oter-bar-show {
+  height: 6px;
+}
+
+.oter-bar-default {
+  height: 1.52px;
+}
+
+.oter-bar-box-default {
+  height: 8px;
+}
+
+.bar-item-pus-default{
+  right: -1px;
+  width: 4px;
+  top: -1.2px;
+  height: 3px;
+}
+
+.bar-item-pus-show{
+  right: -5px;
+  width: 10px;
+  top: -3px;
+  height: 11px;
+}
+
+.bar-item-pus-animate{
+  animation: myfr 1s linear 0s infinite alternate;
+}
+
+.bar-item-pus{
   position: absolute;
-  top: -1px;
-  left: 0;
+  background-color: #ababab;
+  border-radius: 53%;
+  transition: .3s;
+}
+
+.bar-item{
+  position: relative;
+  width: 23%;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.oter-bar {
+  width: 80%;
+  background-color: rgba(255, 255, 255, 0.33);
+  cursor: pointer;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: row;
+  border-radius:1px;
+  justify-content:space-between;
+  transition: .3s;
+}
+
+.oter-bar-box {
+  width: 100%;
+  display: flex;
+  /* 从下往上布局 */
+  flex-direction: column-reverse;
 }
 
 #io-play-time {
@@ -168,7 +255,7 @@ const IoCurrMouseleavetEvent = () => {
   transition: 0.378s;
 }
 
-#io-play-time:hover{
+#io-play-time:hover {
   filter: brightness(1.02) drop-shadow(0 0 0.1px rgba(255, 255, 255, 1));
 }
 
@@ -210,7 +297,7 @@ const IoCurrMouseleavetEvent = () => {
   transition: 0.378s;
 }
 
-.io-play-right-oper>span>img:hover{
+.io-play-right-oper>span>img:hover {
   filter: brightness(1.02) drop-shadow(0 0 1px rgba(200, 200, 200, 0.8));
 }
 
@@ -281,7 +368,7 @@ const IoCurrMouseleavetEvent = () => {
   justify-content: space-around;
 }
 
-.io-curr{
+.io-curr {
   min-width: 700px;
   height: 74px;
   position: absolute;
@@ -291,17 +378,30 @@ const IoCurrMouseleavetEvent = () => {
   transform: translateX(-50%);
 }
 
-.io-show{
+.io-show {
   bottom: 20px;
 }
 
-.io-hide{
+.io-hide {
   bottom: -70px;
 }
 
 .io {
   min-width: 700px;
   height: 74px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  background-color: rgba(188, 185, 189, 0.39);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  border-radius: 14px;
+  transition: 0.5s;
+}
+
+.io-box {
+  min-width: 700px;
+  height: 80px;
   /* 绝对定位 */
   position: absolute;
   z-index: 999;
@@ -310,21 +410,14 @@ const IoCurrMouseleavetEvent = () => {
   transform: translateX(-50%);
   /* 与父元素底部相距 20px */
   /* bottom: -74px; */
-  /* 半透明白色背景 */
-  background-color: rgba(188, 185, 189, 0.39);
-  /* 阴影 */
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  border-radius: 14px;
   /* overflow: hidden; */
-  display: flex;
-  /* 水平布局 */
+  /* display: flex;
   flex-direction: row;
-  /* 显示一行 */
   flex-wrap: nowrap;
-  /* 垂直居中 */
-  align-items: center;
+  align-items: center; */
   transition: 0.5s;
 }
+
 
 .lyric li {
   text-align: center;
@@ -357,8 +450,10 @@ const IoCurrMouseleavetEvent = () => {
   align-items: center;
 }
 
+
 .lyric {
   overflow-y: hidden;
+  position: relative;
   flex: 1;
   height: 100%;
   /* background-color: rgba(255, 230, 215, 0.5); */
@@ -386,6 +481,7 @@ const IoCurrMouseleavetEvent = () => {
 .head-base-info>span {
   min-width: 50px;
   margin-inline: 16px;
+  font-size: 14px;
 }
 
 .head-base-info {
@@ -420,7 +516,7 @@ const IoCurrMouseleavetEvent = () => {
   left: 50%;
   transform: translateX(-50%);
   /* 与父元素底部相距 20px */
-  top: 20px;
+  top: 40px;
   /* 圆角 */
   border-radius: 20px;
   /* background-color: rgba(255, 255, 255, 0.5); */

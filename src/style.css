@@ -7,6 +7,7 @@ html, body, ul, li, ol, dl, dd, dt, p, h1, h2, h3, h4, h5, h6, form, fieldset, l
 body{
   width: 100%;
   height: 100vh;
+  user-select: none;
 }
 
 fieldset, img, input, button {             
@@ -52,7 +53,7 @@ table {
 
 
 body {
-    font: "微软雅黑", "SimSun";    
+    font-family: "微软雅黑", "SimSun";    
     color: #666;
     background: #fff
 }
