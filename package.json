@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "howler": "^2.2.4",
+    "interactjs": "^1.10.19",
     "pinia": "^2.1.6",
     "vue": "^3.3.4"
   },

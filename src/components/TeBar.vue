@@ -4,10 +4,10 @@
             @mouseenter="IoCurrMouseenterEvent">
             <div class="oter-bar-box oter-bar-box-default" @mouseleave="IoCurrBarMouseenterEvent"
                 @mouseenter="IoCurrbarMouseenterEvent">
-                <div class="oter-bar" :class="{ 'oter-bar-show': oterBarShow, 'oter-bar-default': !oterBarShow }">
-                    <div class="bar-item">
+                <div @click="oterBarDragEvent" class="oter-bar" :class="{ 'oter-bar-show': oterBarShow, 'oter-bar-default': !oterBarShow }">
+                    <div class="bar-item" :style="barItemStyle" >
                         <div class="bar-item-pus bar-item-pus-animate"
-                            :class="{ 'bar-item-pus-show': oterBarShow, 'bar-item-pus-default': !oterBarShow }"></div>
+                            :class="{ 'bar-item-pus-show': oterBarShow, 'bar-item-pus-default': !oterBarShow , 'bar-item-pus-none': !ioCurrPlay}"></div>
                     </div>
                 </div>
             </div>
@@ -42,9 +42,9 @@
                         <img src="../assets/icon/volume.svg" alt="">
                     </span>
                     <span id="io-play-time">
-                        <span>03:23</span>
+                        <span>{{currentFormtTime}}</span>
                         <span>/</span>
-                        <span>05:11</span>
+                        <span>{{ durationFormtTime }}</span>
                     </span>
                 </div>
             </div>
@@ -55,18 +55,61 @@
 </template>
 
 <script setup lang="ts">
-import { ref,watch } from 'vue'
+import { ref,watch,computed } from 'vue'
 import { useSongStore } from '../stores/SongStore.js'
 
 const songStore = useSongStore()
 
+// 监听播放状态
 watch(() => songStore.playing, (newValue) => {
   ioCurrPlay.value = newValue
 });
 
+// 当前播放百分比
+const percent = ref(0)
+const barItemStyle = ref({
+  width: '0%'
+})
+// 监听当前播放进度
+watch(() => songStore.percent, (newValue) => {
+  percent.value = newValue
+});
+watch(() => percent.value, () => {
+  barItemStyle.value.width = percent.value * 100 + '%'
+});
+
+// 当前已播放时长 (mm:ss)
+const currentFormtTime = computed(() => {
+  const time = songStore.currentTime
+  const minute = Math.floor(time / 1000 / 60)
+  const second = Math.floor(time / 1000 % 60)
+  return `${(minute).toString().padStart(2, '0')}:${(second).toString().padStart(2, '0')}`
+})
+// 歌曲总时长 (mm:ss)
+const durationFormtTime = computed(() => {
+  const time = songStore.duration
+  const minute = Math.floor(time / 1000 / 60)
+  const second = Math.floor(time / 1000 % 60)
+  return `${(minute).toString().padStart(2, '0')}:${(second).toString().padStart(2, '0')}`
+})
+
 // 切换播放状态
 const togglePlay = (value:boolean) => {
   songStore.ChangePlaying(value)
+}
+// 进度条拖动事件
+const oterBarDragEvent = (e: MouseEvent) => {
+  console.log('点击了进度条')
+  // 当前点击的元素
+  const target = e.currentTarget as HTMLElement;
+  // 计算当前鼠标在元素中点击的位置
+  const offsetLeft = target.getBoundingClientRect().left;
+  const offsetWidth = target.offsetWidth;
+  const offsetClickX = e.clientX - offsetLeft;
+  // 点击百分比
+  const offsetPercent = offsetClickX / offsetWidth;
+  // 修改当前播放进度
+  songStore.ChangeCurrentTime(offsetPercent)
 }
 
 // 是否显示状态栏
@@ -233,9 +276,16 @@ const IoCurrbarMouseenterEvent = () => {
 
 .bar-item-pus-default{
   right: -1px;
-  width: 4px;
+  width: 3px;
   top: -1.2px;
   height: 3px;
+  border-radius: 0%;
+}
+
+.bar-item-pus-none{
+  /* display: none; */
+  /* 改为透明 */
+  opacity: 0;
 }
 
 .bar-item-pus-show{
@@ -243,6 +293,7 @@ const IoCurrbarMouseenterEvent = () => {
   width: 10px;
   top: -3px;
   height: 11px;
+  border-radius: 53%;
 }
 
 .bar-item-pus-animate{
@@ -252,7 +303,6 @@ const IoCurrbarMouseenterEvent = () => {
 .bar-item-pus{
   position: absolute;
   background-color: #ababab;
-  border-radius: 53%;
   transition: .3s;
 }
 
@@ -261,6 +311,7 @@ const IoCurrbarMouseenterEvent = () => {
   width: 23%;
   border-radius: 2px;
   background-color: rgba(255, 255, 255, 0.5);
+  transition: .3s;
 }
 
 .oter-bar {
@@ -297,7 +348,7 @@ const IoCurrbarMouseenterEvent = () => {
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: center;
-  background-color: rgba(188, 185, 189, 0.39);
+  background-color: #4b494b;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   border-radius: 14px;
   transition: 0.5s;

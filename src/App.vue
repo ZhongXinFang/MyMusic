@@ -1,44 +1,53 @@
 <script setup lang="ts">
 import { watch, ref } from 'vue'
 import TeBar from './components/TeBar.vue'
+import Form from './components/Form.vue'
 import { useSongStore } from './stores/SongStore.js'
 import { Howl } from 'howler';
 
 const sound = new Howl({
   src: ['https://localhost:7111/api/SongFile/2B7753B672264B68A909FF432642D6A2.opus'], // 音频文件的URL或路径
-  autoplay: true, // 自动播放
-  loop: true, // 循环播放
-  volume: 0.5, // 音量（0.0到1.0之间）
+  autoplay: false, // 自动播放
+  loop: false,     // 循环播放
+  volume: 0.3,     // 音量（0.0到1.0之间）
+  html5: true,     // 是否使用HTML5播放器
   onend: function () {
     console.log('音频播放完毕');
   }
 });
 
-// 当前播放进度
-const ioCurrPlayTime = ref(0)
+// 监听进度改变定时器 ts
+let ioCurrPlayTimeTimer: number | null = null
 
 // 监听进度改变事件
 sound.on('play', function () {
-  console.log(sound);
-  setInterval(function() {
-    const seek = sound.seek(); // 获取当前播放进度（以秒为单位）
-    ioCurrPlayTime.value = seek * 1000
-    console.log("当前播放进度：" + seek.toFixed(3) + "秒");
-  }, 100); // 每秒更新一次播放进度
+  if (ioCurrPlayTimeTimer === null) {
+    setInterval(function () {
+      const currentTime = sound.seek() * 1000;
+      const duration = sound.duration() * 1000;
+      const percent = currentTime / duration;
+
+      songStore.duration = duration
+      songStore.currentTime = currentTime
+      songStore.percent = percent
+    }, 100);
+  }
 });
 
 const songStore = useSongStore()
-// 当前是否处于播放状态
-const ioCurrPlay = ref(false)
 watch(() => songStore.playing, (newValue) => {
-  ioCurrPlay.value = newValue
-  console.log(sound);
   if (newValue === true) {
-    sound.seek(ioCurrPlayTime.value / 1000)
     sound.play()
   }
   else {
     sound.pause()
+  }
+});
+
+watch(() => songStore.ChangeCurrentPercent, (newValue) => {
+  if (newValue !== null) {
+    sound.seek(songStore.duration / 1000 * newValue)
+    songStore.ChangeCurrentTime(null)
   }
 });
 
@@ -110,11 +119,20 @@ watch(() => songStore.playing, (newValue) => {
         </ul>
       </div>
     </div>
+    <Form class="from"/>
   </div>
   <TeBar />
 </template>
 
 <style scoped>
+.from {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 320px;
+  height: 480px;
+}
+
 .head-base-info>span {
   min-width: 50px;
   margin-inline: 16px;
@@ -201,7 +219,7 @@ watch(() => songStore.playing, (newValue) => {
   color: #eee;
 }
 
-.cover>* {
+.cover>img {
   /* 宽是父元素宽高中比较小的一半 */
   width: 220px;
   height: 220px;

@@ -1,25 +1,54 @@
 @charset "UTF-8";
-html, body, ul, li, ol, dl, dd, dt, p, h1, h2, h3, h4, h5, h6, form, fieldset, legend, img {
+
+html,
+body,
+ul,
+li,
+ol,
+dl,
+dd,
+dt,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+form,
+fieldset,
+legend,
+img {
     margin: 0;
     padding: 0;
 }
 
-body{
-  width: 100%;
-  height: 100vh;
-  user-select: none;
-  overflow: hidden;
+html {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
 }
 
-fieldset, img, input, button {             
+body {
+    width: 100%;
+    height: 100vh;
+    user-select: none;
+    overflow: hidden;
+}
+
+fieldset,
+img,
+input,
+button {
     border: none;
     padding: 0;
     margin: 0;
     outline-style: none;
 }
 
-ul, ol {
-    list-style: none;               
+ul,
+ol {
+    list-style: none;
 }
 
 input {
@@ -28,11 +57,14 @@ input {
     font-family: "微软雅黑", "SimSun";
 }
 
-select, input {
+select,
+input {
     vertical-align: middle;
 }
 
-select, input, textarea {
+select,
+input,
+textarea {
     font-size: 12px;
     margin: 0;
 }
@@ -49,18 +81,18 @@ img {
 
 
 table {
-    border-collapse: collapse;            
+    border-collapse: collapse;
 }
 
 
 body {
-    font-family: "微软雅黑", "SimSun";    
+    font-family: "微软雅黑", "SimSun";
     color: #666;
     background: #fff
 }
 
 a {
-  color: #0969da;
+    color: #0969da;
     text-decoration: underline;
 }
 
@@ -70,26 +102,33 @@ a:hover {
     text-decoration: underline;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     text-decoration: none;
     font-weight: normal;
     font-size: 100%;
 }
 
-s, i, em {
+s,
+i,
+em {
     font-style: normal;
     text-decoration: none;
 }
 
 ::selection {
-  color: #333;
-  background-color: #dae3ea;
+    color: #333;
+    background-color: #dae3ea;
 }
 
 button {
-  background-color: #9f9f9f40;
-  border-radius: 6px;
-  padding: 5px 10px;
-  cursor: pointer;
-  min-height: 30px;
+    background-color: #9f9f9f40;
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    min-height: 30px;
 }
