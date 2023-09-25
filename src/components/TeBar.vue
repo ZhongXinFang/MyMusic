@@ -32,13 +32,15 @@
                     </span>
                 </div>
                 <div class="io-play-right-oper">
-                    <span>
-                        <img src="../assets/icon/download.svg" alt="">
+                    <span title="播放列表" @click="formStore.Show(AppFormEnum.PlayingListForm)">
+                        <img src="../assets/icon/playList.svg" alt="">
                     </span>
                     <span>
-                        <img src="../assets/icon/playMode-List.svg" alt="">
+                        <img v-show="ioCurrPlayMode === PlayModeEnum.loop" title="列表循环" @click="togglePlayMode()" src="../assets/icon/playMode-List.svg" alt="">
+                        <img v-show="ioCurrPlayMode === PlayModeEnum.shuffle" title="随机播放" @click="togglePlayMode()" src="../assets/icon/playMode-Random.svg" alt="">
+                        <img v-show="ioCurrPlayMode === PlayModeEnum.singleLoop" title="单曲循环" @click="togglePlayMode()" src="../assets/icon/playMode-Single.svg" alt="">
                     </span>
-                    <span>
+                    <span title="调整音量">
                         <img src="../assets/icon/volume.svg" alt="">
                     </span>
                     <span id="io-play-time">
@@ -56,20 +58,37 @@
 
 <script setup lang="ts">
 import { ref,watch,computed } from 'vue'
-import { useSongStore } from '../stores/SongStore.js'
+import { useFormStore } from '@/stores/FormStore.js'
+import { useSongStore } from '@/stores/SongStore.js'
+import { PlayModeEnum } from '@/models/PlayModeEnum.ts'
+import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 
 const songStore = useSongStore()
+const formStore = useFormStore()
 
+// 当前播放百分比
+const percent = ref(0)
+// 播放进度条中样式 
+const barItemStyle = ref({
+  width: '0%' // 已经播放的进度条宽度
+})
+// 是否显示状态栏
+let ioShow = ref(true)
+// 是否展开进度条
+let oterBarShow = ref(true)
+// 鼠标离开 io-curr 区域时。用于隐藏 io 控制台的定时器
+let ioCurrMouseoutTimer: any | null = null
+// 当前是否处于播放状态
+let ioCurrPlay = ref(false)
+// 当前的播放模式
+let ioCurrPlayMode = ref<PlayModeEnum>(PlayModeEnum.loop)
+
+/// 监听器
+/// songStore 相关
 // 监听播放状态
 watch(() => songStore.playing, (newValue) => {
   ioCurrPlay.value = newValue
 });
-
-// 当前播放百分比
-const percent = ref(0)
-const barItemStyle = ref({
-  width: '0%'
-})
 // 监听当前播放进度
 watch(() => songStore.percent, (newValue) => {
   percent.value = newValue
@@ -77,29 +96,29 @@ watch(() => songStore.percent, (newValue) => {
 watch(() => percent.value, () => {
   barItemStyle.value.width = percent.value * 100 + '%'
 });
+watch(() => songStore.playMode, (newValue) => {
+  ioCurrPlayMode.value = newValue
+});
 
-// 当前已播放时长 (mm:ss)
-const currentFormtTime = computed(() => {
-  const time = songStore.currentTime
-  const minute = Math.floor(time / 1000 / 60)
-  const second = Math.floor(time / 1000 % 60)
-  return `${(minute).toString().padStart(2, '0')}:${(second).toString().padStart(2, '0')}`
-})
-// 歌曲总时长 (mm:ss)
-const durationFormtTime = computed(() => {
-  const time = songStore.duration
-  const minute = Math.floor(time / 1000 / 60)
-  const second = Math.floor(time / 1000 % 60)
-  return `${(minute).toString().padStart(2, '0')}:${(second).toString().padStart(2, '0')}`
-})
-
+/// 页面动作处理
 // 切换播放状态
 const togglePlay = (value:boolean) => {
   songStore.ChangePlaying(value)
 }
+// 切换播放模式
+const togglePlayMode = (): void =>
+{
+  const nowvalue = ioCurrPlayMode.value
+  const enumValues = Object.values(PlayModeEnum) as PlayModeEnum[];
+  const currentIndex = enumValues.indexOf(nowvalue);
+  console.log(nowvalue,currentIndex,enumValues);
+  
+  const nextIndex = (currentIndex + 1) % enumValues.length;
+  songStore.ChangePlayMode(enumValues[nextIndex])
+}
+
 // 进度条拖动事件
 const oterBarDragEvent = (e: MouseEvent) => {
-  console.log('点击了进度条')
   // 当前点击的元素
   const target = e.currentTarget as HTMLElement;
   // 计算当前鼠标在元素中点击的位置
@@ -112,15 +131,7 @@ const oterBarDragEvent = (e: MouseEvent) => {
   songStore.ChangeCurrentTime(offsetPercent)
 }
 
-// 是否显示状态栏
-let ioShow = ref(true)
-// 是否展开进度条
-let oterBarShow = ref(true)
-// 鼠标离开 io-curr 区域时。用于隐藏 io 控制台的定时器
-let ioCurrMouseoutTimer: any | null = null
-// 当前是否处于播放状态
-let ioCurrPlay = ref(false)
-
+/// UI 显示相关
 const IoCurrMouseenterEvent = () => {
   ioShow.value = true
   if (ioCurrMouseoutTimer !== null) {
@@ -141,6 +152,22 @@ const IoCurrBarMouseenterEvent = () => {
 const IoCurrbarMouseenterEvent = () => {
   oterBarShow.value = true
 }
+
+/// 计算属性
+// 当前已播放时长 (mm:ss)
+const currentFormtTime = computed(() => {
+  const time = isNaN(songStore.currentTime) ? 0 : songStore.currentTime
+  const minute = Math.floor(time / 1000 / 60)
+  const second = Math.floor(time / 1000 % 60)
+  return `${(minute).toString().padStart(2, '0')}:${(second).toString().padStart(2, '0')}`
+})
+// 歌曲总时长 (mm:ss)
+const durationFormtTime = computed(() => {
+  const time = isNaN(songStore.duration) ? 0 : songStore.duration
+  const minute = Math.floor(time / 1000 / 60)
+  const second = Math.floor(time / 1000 % 60)
+  return `${(minute).toString().padStart(2, '0')}:${(second).toString().padStart(2, '0')}`
+})
 </script>
 
 <style scoped>

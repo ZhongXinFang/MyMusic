@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { watch, ref } from 'vue'
-import TeBar from './components/TeBar.vue'
-import Form from './components/Form.vue'
-import { useSongStore } from './stores/SongStore.js'
+import TeBar from '@/components/TeBar.vue'
+import Form from '@/components/PlayingListForm.vue'
+import { useSongStore } from '@/stores/SongStore.js'
 import { Howl } from 'howler';
 
 const sound = new Howl({

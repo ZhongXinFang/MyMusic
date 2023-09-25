@@ -5,7 +5,7 @@
                 <span class="from-head-left-text">播放列表</span>
             </div>
             <div class="from-head-right">
-                <button title="隐藏窗口" class="from-head-io-button" v-show="showMinimize">
+                <button @click="isShow=false" title="隐藏窗口" class="from-head-io-button" v-show="showMinimize">
                     <img src="../assets/icon/最小化.svg" alt="">
                 </button>
                 <button title="放大窗口" class="from-head-io-button" v-show="showMaximize">
@@ -50,15 +50,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import interact from 'interactjs'
-// 窗口属性
-// 是否显示最大化按钮
-const showMaximize = ref(false)
-// 是否显示最小化按钮
-const showMinimize = ref(true)
-// 是否显示关闭按钮
-const showClose = ref(false)
-// 是否允许手动调整窗口大小
-// const allowResize = ref(false)
+import { useForm } from '@/components/FormBase/useForm.ts'
+
+const { showMaximize,showMinimize,showClose,isShow } = useForm()
 
 // 播放列表相关
 // 正在播放的行索引(从 0 开始)
@@ -78,6 +72,11 @@ const dragMoveListener = (event: any) => {
 }
 
 onMounted(() => {
+
+    showMinimize.value = true
+    showMaximize.value = false
+    showClose.value = false
+
     interact(draggableRef.value!)
         .resizable({
             // 可以从所有边缘和角落进行调整大小
@@ -124,26 +123,6 @@ onMounted(() => {
                 })
             ]
         });
-
-    // interact(draggableRef.value!)
-    //     .draggable({
-    //         inertia: true,
-    //         modifiers: [
-    //             interact.modifiers.restrictRect({
-    //                 restriction: 'parent',
-    //                 endOnly: true
-    //             }),
-    //             // 最小尺寸
-    //             interact.modifiers.restrictSize({
-    //                 min: { width: 100, height: 50 }
-    //             })
-    //         ],
-    //         autoScroll: true,
-
-    //         listeners: {
-    //             move: dragMoveListener,
-    //         }
-    //     })
 })
 </script>
 

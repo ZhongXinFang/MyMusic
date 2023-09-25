@@ -132,3 +132,7 @@ button {
     cursor: pointer;
     min-height: 30px;
 }
+
+.hidden{
+    display: none !important;
+}
