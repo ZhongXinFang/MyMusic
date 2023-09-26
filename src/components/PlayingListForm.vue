@@ -52,7 +52,7 @@ import { ref, onMounted } from 'vue'
 import interact from 'interactjs'
 import { useForm } from '@/components/FormBase/useForm.ts'
 
-const { showMaximize,showMinimize,showClose,isShow } = useForm()
+const { showMaximize, showMinimize, showClose, isShow } = useForm()
 
 // 播放列表相关
 // 正在播放的行索引(从 0 开始)
@@ -72,7 +72,6 @@ const dragMoveListener = (event: any) => {
 }
 
 onMounted(() => {
-
     showMinimize.value = true
     showMaximize.value = false
     showClose.value = false
@@ -83,7 +82,9 @@ onMounted(() => {
             edges: { left: false, right: false, bottom: false, top: true },
             listeners: {
                 move(event) {
-                    const target = draggableRef
+                    const target = { value: event.target}
+                    if (target.value === null)
+                        return
                     let x = (parseFloat(target.value.getAttribute('data-x')) || 0);
                     let y = (parseFloat(target.value.getAttribute('data-y')) || 0);
 
@@ -350,10 +351,6 @@ span>img {
 .from-head-io-button {
     background-color: #00000000;
     border-radius: 0;
-}
-
-.from-head-io-button:first-child {
-    /* border-radius: 0 0 0 12px; */
 }
 
 .from-head {

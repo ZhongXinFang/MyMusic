@@ -48,14 +48,14 @@ export function useForm() {
             instance.value = getCurrentInstance();
         }
         if (instance.value)
-            formStore.AddForm(instance.value,formEnumType)
+            formStore.AddForm(instance.value,formEnumType.value)
     });
 
     onUnmounted(() => {
         // 当前组件卸载时，将它从集合中移除
         if (instance.value === null)
             return
-        formStore.RemoveForm(instance.value,formEnumType)
+        formStore.RemoveForm(instance.value,formEnumType.value)
     });
 
     return {
