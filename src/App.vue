@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { watch, ref } from 'vue'
+import { watch } from 'vue'
 import TeBar from '@/components/TeBar.vue'
 import Form from '@/components/PlayingListForm.vue'
 import { useSongStore } from '@/stores/SongStore.js'
-import { Howl } from 'howler';
+import { Howl } from 'howler'
+import  BaseForm  from '@/components/FormBase/BaseForm.vue'
 
 const sound = new Howl({
   src: ['https://localhost:7111/api/SongFile/2B7753B672264B68A909FF432642D6A2.opus'], // 音频文件的URL或路径
@@ -55,7 +56,7 @@ watch(() => songStore.ChangeCurrentPercent, (newValue) => {
 <template>
   <div class="main-background">
     <div class="main-background-style-box">
-      <img class="main-background-img" src="./assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg">
+      <img class="main-background-img" src="@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg">
     </div>
   </div>
   <div class="content">
@@ -71,7 +72,7 @@ watch(() => songStore.ChangeCurrentPercent, (newValue) => {
     <div class="lyric-coontent">
       <!-- 封面旋转 -->
       <div class="cover">
-        <img src="./assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="" />
+        <img src="@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="" />
       </div>
       <!-- 歌词区域 -->
       <div class="lyric">
@@ -122,6 +123,7 @@ watch(() => songStore.ChangeCurrentPercent, (newValue) => {
     <Form class="from"/>
   </div>
   <TeBar />
+  <BaseForm />
 </template>
 
 <style scoped>

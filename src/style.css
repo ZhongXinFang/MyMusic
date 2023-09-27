@@ -133,6 +133,41 @@ button {
     min-height: 30px;
 }
 
-.hidden{
+.hidden {
     display: none !important;
+}
+
+.window {
+    animation-fill-mode: forwards;
+}
+
+.window.closed {
+    animation-name: close;
+    animation-duration: 0.3s;
+}
+
+.window.show {
+    animation-name: show;
+    animation-duration: 0.3s;
+}
+
+@keyframes close {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        display: none;
+    }
+}
+
+@keyframes show {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }

@@ -2,9 +2,6 @@ import { ref, onMounted, onUnmounted, getCurrentInstance, watch } from 'vue';
 import { useFormStore } from '@/stores/FormStore.js'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 export function useForm() {
-
-    const formStore = useFormStore()
-
     // 窗口标识
     const formEnumType = ref<AppFormEnum>(AppFormEnum.PlayingListForm)
     // 当前实例
@@ -41,22 +38,6 @@ export function useForm() {
         instance.value.proxy.$el.classList.add('hidden')
         // isShow.value = false
     }
-
-    onMounted(() => {
-        // 当前组件挂载时，将它添加到集合中
-        if (instance.value === null) {
-            instance.value = getCurrentInstance();
-        }
-        if (instance.value)
-            formStore.AddForm(instance.value,formEnumType.value)
-    });
-
-    onUnmounted(() => {
-        // 当前组件卸载时，将它从集合中移除
-        if (instance.value === null)
-            return
-        formStore.RemoveForm(instance.value,formEnumType.value)
-    });
 
     return {
         showMaximize,

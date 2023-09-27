@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { defineStore } from 'pinia'
 import { PlayModeEnum } from '@/models/PlayModeEnum.ts'
 export const useSongStore = defineStore
     ("SongState", () => {
@@ -29,10 +29,16 @@ export const useSongStore = defineStore
             playMode.value = value
         }
 
+        // 真实的播放列表
+        const playList = ref<Array<any>>([])
+        // 用户页面的播放列表
+        const userPlayList = ref<Array<any>>([])
+
         return {
             playing, ChangePlaying,
             duration, currentTime, percent,
             ChangeCurrentTime, ChangeCurrentPercent,
-            playMode,ChangePlayMode
+            playMode, ChangePlayMode,
+            playList,userPlayList
         }
     })  

@@ -1,30 +1,31 @@
 <template>
-    <div class="from" ref="draggableRef">
+    <div class="from window" ref="draggableRef">
         <div class="from-head">
             <div class="from-head-left">
                 <span class="from-head-left-text">播放列表</span>
             </div>
             <div class="from-head-right">
-                <button @click="isShow=false" title="隐藏窗口" class="from-head-io-button" v-show="showMinimize">
-                    <img src="../assets/icon/最小化.svg" alt="">
+                <button @click="formData.isShow = false" title="隐藏窗口" class="from-head-io-button"
+                    v-show="formData.showMinimize">
+                    <img src="@/assets/icon/最小化.svg" alt="">
                 </button>
-                <button title="放大窗口" class="from-head-io-button" v-show="showMaximize">
-                    <img src="../assets/icon/最大化.svg" alt="">
+                <button title="放大窗口" class="from-head-io-button" v-show="formData.showMaximize">
+                    <img src="@/assets/icon/最大化.svg" alt="">
                 </button>
-                <button title="关闭窗口" class="from-head-io-button" v-show="showClose">
-                    <img src="../assets/icon/关闭.svg" alt="">
+                <button title="关闭窗口" class="from-head-io-button" v-show="formData.showClose">
+                    <img src="@/assets/icon/关闭.svg" alt="">
                 </button>
             </div>
         </div>
         <div class="from-body">
             <div class="info">
                 <span class="info-i">共200首歌曲，已缓存120首</span>
-                <span class="info-o" title="清空播放列表"><img src="../assets/icon/删除.svg" alt=""></span>
+                <span class="info-o" title="清空播放列表"><img src="@/assets/icon/删除.svg" alt=""></span>
             </div>
             <ul>
                 <li v-for="index in 20" title="🎶" :class="{ 'now-playing': playingIndex === index - 1 }">
                     <span class="li-img">
-                        <img src="../assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
+                        <img src="@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
                         <div v-if="playingIndex === index - 1" class="li-img-playing">
                             <svg width="30" height="10" viewBox="0 0 50 10" style="margin-left: 8px;">
                                 <g transform="translate(50%, 50%)">
@@ -48,11 +49,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import interact from 'interactjs'
-import { useForm } from '@/components/FormBase/useForm.ts'
+import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
+import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
+import { useFormStore } from '@/stores/FormStore.js'
 
-const { showMaximize, showMinimize, showClose, isShow } = useForm()
+const formStore = useFormStore()
+const formData = ref<FormDataModel>(new FormDataModel(AppFormEnum.PlayingListForm, true, 'id?temp=1'))
+
+// 窗口显示相关
+watch(() => formData.value.isShow, (newvalue) => {
+    const html = draggableRef.value
+    if (!html)
+        return
+    if (newvalue === true)
+    {
+        html.classList.remove('closed')
+        html.classList.add('show')
+    }
+    else
+    {
+        html.classList.remove('show')
+        html.classList.add('closed')
+    }
+})
 
 // 播放列表相关
 // 正在播放的行索引(从 0 开始)
@@ -60,7 +81,7 @@ const playingIndex = ref(2)
 
 
 // 窗口拖动相关
-const draggableRef = ref(null)
+const draggableRef = ref<HTMLElement | null>(null)
 const dragMoveListener = (event: any) => {
     const target = event.target
     let x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
@@ -72,9 +93,11 @@ const dragMoveListener = (event: any) => {
 }
 
 onMounted(() => {
-    showMinimize.value = true
-    showMaximize.value = false
-    showClose.value = false
+    formData.value.showMinimize = true
+    formData.value.showMaximize = false
+    formData.value.showClose = false
+
+    formStore.AddForm(formData.value)
 
     interact(draggableRef.value!)
         .resizable({
@@ -82,7 +105,7 @@ onMounted(() => {
             edges: { left: false, right: false, bottom: false, top: true },
             listeners: {
                 move(event) {
-                    const target = { value: event.target}
+                    const target = { value: event.target }
                     if (target.value === null)
                         return
                     let x = (parseFloat(target.value.getAttribute('data-x')) || 0);

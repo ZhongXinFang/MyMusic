@@ -1,63 +1,68 @@
 <template>
-    <div>
-        <div class="io-box" :class="{ 'io-show': ioShow, 'io-hide': !ioShow }" @mouseleave="IoCurrMouseleavetEvent"
-            @mouseenter="IoCurrMouseenterEvent">
-            <div class="oter-bar-box oter-bar-box-default" @mouseleave="IoCurrBarMouseenterEvent"
-                @mouseenter="IoCurrbarMouseenterEvent">
-                <div @click="oterBarDragEvent" class="oter-bar" :class="{ 'oter-bar-show': oterBarShow, 'oter-bar-default': !oterBarShow }">
-                    <div class="bar-item" :style="barItemStyle" >
-                        <div class="bar-item-pus bar-item-pus-animate"
-                            :class="{ 'bar-item-pus-show': oterBarShow, 'bar-item-pus-default': !oterBarShow , 'bar-item-pus-none': !ioCurrPlay}"></div>
-                    </div>
-                </div>
+  <div>
+    <div class="io-box" :class="{ 'io-show': ioShow, 'io-hide': !ioShow }" @mouseleave="IoCurrMouseleavetEvent"
+      @mouseenter="IoCurrMouseenterEvent">
+      <div class="oter-bar-box oter-bar-box-default" @mouseleave="IoCurrBarMouseenterEvent"
+        @mouseenter="IoCurrbarMouseenterEvent">
+        <div @click="oterBarDragEvent" class="oter-bar"
+          :class="{ 'oter-bar-show': oterBarShow, 'oter-bar-default': !oterBarShow }">
+          <div class="bar-item" :style="barItemStyle">
+            <div class="bar-item-pus bar-item-pus-animate"
+              :class="{ 'bar-item-pus-show': oterBarShow, 'bar-item-pus-default': !oterBarShow, 'bar-item-pus-none': !ioCurrPlay }">
             </div>
-            <div class="io">
-                <div class="io-play-img-box">
-                    <img class="io-play-img" src="../assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
-                </div>
-                <div class="io-play-info-box">
-                    <span class="io-play-info-lyric">我却靠在墙壁背我的ABC</span>
-                    <span class="io-play-info-title">听妈妈的话 - 周杰伦</span>
-                </div>
-                <div class="io-play-box">
-                    <span>
-                        <img src="../assets/icon/back.svg" alt="">
-                    </span>
-                    <span id="io-play">
-                        <img v-show="ioCurrPlay" src="../assets/icon/play.svg" alt="" @click="togglePlay(false)">
-                        <img v-show="!ioCurrPlay" src="../assets/icon/pause.svg" alt="" @click="togglePlay(true)">
-                    </span>
-                    <span>
-                        <img src="../assets/icon/next.svg" alt="">
-                    </span>
-                </div>
-                <div class="io-play-right-oper">
-                    <span title="播放列表" @click="formStore.Show(AppFormEnum.PlayingListForm)">
-                        <img src="../assets/icon/playList.svg" alt="">
-                    </span>
-                    <span>
-                        <img v-show="ioCurrPlayMode === PlayModeEnum.loop" title="列表循环" @click="togglePlayMode()" src="../assets/icon/playMode-List.svg" alt="">
-                        <img v-show="ioCurrPlayMode === PlayModeEnum.shuffle" title="随机播放" @click="togglePlayMode()" src="../assets/icon/playMode-Random.svg" alt="">
-                        <img v-show="ioCurrPlayMode === PlayModeEnum.singleLoop" title="单曲循环" @click="togglePlayMode()" src="../assets/icon/playMode-Single.svg" alt="">
-                    </span>
-                    <span title="调整音量">
-                        <img src="../assets/icon/volume.svg" alt="">
-                    </span>
-                    <span id="io-play-time">
-                        <span>{{currentFormtTime}}</span>
-                        <span>/</span>
-                        <span>{{ durationFormtTime }}</span>
-                    </span>
-                </div>
-            </div>
+          </div>
         </div>
-        <!-- io 的鼠标移动区域，现在用于实现当鼠标移动到此区域时，控制台显示出来，否则就隐藏 -->
-        <div class="io-curr" @mouseenter="IoCurrMouseenterEvent"></div>
+      </div>
+      <div class="io">
+        <div class="io-play-img-box">
+          <img class="io-play-img" src="@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
+        </div>
+        <div class="io-play-info-box">
+          <span class="io-play-info-lyric">我却靠在墙壁背我的ABC</span>
+          <span class="io-play-info-title">听妈妈的话 - 周杰伦</span>
+        </div>
+        <div class="io-play-box">
+          <span>
+            <img src="@/assets/icon/back.svg" alt="">
+          </span>
+          <span id="io-play">
+            <img v-show="ioCurrPlay" src="@/assets/icon/play.svg" alt="" @click="togglePlay(false)">
+            <img v-show="!ioCurrPlay" src="@/assets/icon/pause.svg" alt="" @click="togglePlay(true)">
+          </span>
+          <span>
+            <img src="@/assets/icon/next.svg" alt="">
+          </span>
+        </div>
+        <div class="io-play-right-oper">
+          <span title="播放列表" @click="showPlayingList">
+            <img src="@/assets/icon/playList.svg" alt="">
+          </span>
+          <span>
+            <img v-show="ioCurrPlayMode === PlayModeEnum.loop" title="列表循环" @click="togglePlayMode()"
+              src="@/assets/icon/playMode-List.svg" alt="">
+            <img v-show="ioCurrPlayMode === PlayModeEnum.shuffle" title="随机播放" @click="togglePlayMode()"
+              src="@/assets/icon/playMode-Random.svg" alt="">
+            <img v-show="ioCurrPlayMode === PlayModeEnum.singleLoop" title="单曲循环" @click="togglePlayMode()"
+              src="@/assets/icon/playMode-Single.svg" alt="">
+          </span>
+          <span title="调整音量">
+            <img src="@/assets/icon/volume.svg" alt="">
+          </span>
+          <span id="io-play-time">
+            <span>{{ currentFormtTime }}</span>
+            <span>/</span>
+            <span>{{ durationFormtTime }}</span>
+          </span>
+        </div>
+      </div>
     </div>
+    <!-- io 的鼠标移动区域，现在用于实现当鼠标移动到此区域时，控制台显示出来，否则就隐藏 -->
+    <div class="io-curr" @mouseenter="IoCurrMouseenterEvent"></div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref,watch,computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useFormStore } from '@/stores/FormStore.js'
 import { useSongStore } from '@/stores/SongStore.js'
 import { PlayModeEnum } from '@/models/PlayModeEnum.ts'
@@ -65,6 +70,14 @@ import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 
 const songStore = useSongStore()
 const formStore = useFormStore()
+
+// 弹出播放列表
+const showPlayingList = () => {
+  const form = formStore.FindFormByType(AppFormEnum.PlayingListForm)
+  if (form === null)
+    return
+  formStore.Toggle(form.id)
+}
 
 // 当前播放百分比
 const percent = ref(0)
@@ -102,17 +115,14 @@ watch(() => songStore.playMode, (newValue) => {
 
 /// 页面动作处理
 // 切换播放状态
-const togglePlay = (value:boolean) => {
+const togglePlay = (value: boolean) => {
   songStore.ChangePlaying(value)
 }
 // 切换播放模式
-const togglePlayMode = (): void =>
-{
+const togglePlayMode = (): void => {
   const nowvalue = ioCurrPlayMode.value
   const enumValues = Object.values(PlayModeEnum) as PlayModeEnum[];
   const currentIndex = enumValues.indexOf(nowvalue);
-  console.log(nowvalue,currentIndex,enumValues);
-  
   const nextIndex = (currentIndex + 1) % enumValues.length;
   songStore.ChangePlayMode(enumValues[nextIndex])
 }
@@ -171,7 +181,6 @@ const durationFormtTime = computed(() => {
 </script>
 
 <style scoped>
-
 .io-play-right-oper {
   flex: 1;
   margin-right: 10px;
@@ -285,23 +294,28 @@ const durationFormtTime = computed(() => {
 }
 
 
-@keyframes myfr 
-{
-     0% { filter: brightness(1.00); }
-     100% { filter: brightness(1.22) drop-shadow(0 0 2.1px rgba(255, 255, 255, 0.85)); }
+@keyframes myfr {
+  0% {
+    filter: brightness(1.00);
+  }
+
+  100% {
+    filter: brightness(1.22) drop-shadow(0 0 2.1px rgba(255, 255, 255, 0.85));
+  }
 }
 
-.io-play-img:hover{
+.io-play-img:hover {
   filter: contrast(1.18);
 }
-.io-play-img{
+
+.io-play-img {
   width: 100%;
   height: 100%;
   transition: 0.378s;
   cursor: pointer;
 }
 
-.bar-item-pus-default{
+.bar-item-pus-default {
   right: -1px;
   width: 3px;
   top: -1.2px;
@@ -309,13 +323,13 @@ const durationFormtTime = computed(() => {
   border-radius: 0%;
 }
 
-.bar-item-pus-none{
+.bar-item-pus-none {
   /* display: none; */
   /* 改为透明 */
   opacity: 0;
 }
 
-.bar-item-pus-show{
+.bar-item-pus-show {
   right: -5px;
   width: 10px;
   top: -3px;
@@ -323,17 +337,17 @@ const durationFormtTime = computed(() => {
   border-radius: 53%;
 }
 
-.bar-item-pus-animate{
+.bar-item-pus-animate {
   animation: myfr 1s linear 0s infinite alternate;
 }
 
-.bar-item-pus{
+.bar-item-pus {
   position: absolute;
   background-color: #ababab;
   transition: .3s;
 }
 
-.bar-item{
+.bar-item {
   position: relative;
   width: 23%;
   border-radius: 2px;
@@ -348,8 +362,8 @@ const durationFormtTime = computed(() => {
   margin-inline: auto;
   display: flex;
   flex-direction: row;
-  border-radius:1px;
-  justify-content:space-between;
+  border-radius: 1px;
+  justify-content: space-between;
   transition: .3s;
 }
 
@@ -368,6 +382,7 @@ const durationFormtTime = computed(() => {
 .oter-bar-box-default {
   height: 8px;
 }
+
 .io {
   min-width: 700px;
   height: 74px;
@@ -425,6 +440,4 @@ const durationFormtTime = computed(() => {
   flex-wrap: nowrap;
   align-items: center; */
   transition: 0.5s;
-}
-
-</style>
+}</style>
