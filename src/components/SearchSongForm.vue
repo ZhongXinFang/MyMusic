@@ -1,8 +1,8 @@
 <template>
-    <div ref="draggableRef" class="from window" @mousedown="formStore.BringToTop(formData.id)">
+    <div ref="form" class="from window" @mousedown="formStore.BringToTop(formData.id)">
         <div class="from-head">
             <div class="from-head-left">
-                <span class="from-head-left-text">播放列表</span>
+                <span class="from-head-left-text">歌曲列表</span>
             </div>
             <div class="from-head-right">
                 <button @click="formData.isShow = false" title="隐藏窗口" class="from-head-io-button"
@@ -18,85 +18,48 @@
             </div>
         </div>
         <div class="from-body">
-            <div class="info">
-                <span class="info-i">共200首歌曲，已缓存120首</span>
-                <span class="info-o" title="清空播放列表"><img src="@/assets/icon/删除.svg" alt=""></span>
-            </div>
-            <ul>
-                <li v-for="index in 20" title="🎶" :class="{ 'now-playing': playingIndex === index - 1 }">
-                    <span class="li-img">
-                        <img src="@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
-                        <div v-if="playingIndex === index - 1" class="li-img-playing">
-                            <svg width="30" height="10" viewBox="0 0 50 10" style="margin-left: 8px;">
-                                <g transform="translate(50%, 50%)">
-                                    <rect class="svg-item" id="r1" x="5" y="0" width="4" height="10" />
-                                    <rect class="svg-item" id="r2" x="10" y="0" width="4" height="10" />
-                                    <rect class="svg-item" id="r3" x="15" y="0" width="4" height="10" />
-                                    <rect class="svg-item" id="r4" x="20" y="0" width="4" height="10" />
-                                </g>
-                            </svg>
-                        </div>
-                    </span>
-                    <span>
-                    </span>
-                    <span class="li-title">听妈妈的话</span>
-                    <span class="li-po">周杰伦</span>
-                    <span class="li-time">04:05</span>
-                </li>
-            </ul>
+            
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, onMounted, watch, onUnmounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import interact from 'interactjs'
 import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
-import { useTeBarStore } from '@/stores/TeBarStore.js'
 import { useFormStore } from '@/stores/FormStore.js'
 
-const teBarStore = useTeBarStore()
 const formStore = useFormStore()
-// let formData: Ref<FormDataModel> = formStore.AddForm1(new FormDataModel(AppFormEnum.PlayingListForm, true, 'id?temp=1'))
-// let formData: Ref<FormDataModel> | Ref<null> | null = null;
-let formData = ref(new FormDataModel(AppFormEnum.PlayingListForm, true, 'id?temp=1'))
+const formData = ref<FormDataModel>(new FormDataModel(AppFormEnum.None, true, 'id?'))
+
 // 窗口显示相关
 watch(() => formData.value.isShow, (newvalue) => {
-    const html = draggableRef.value
-    console.log('isShow', newvalue);
+    const html = form.value
     if (!html)
         return
     if (newvalue === true)
     {
-        teBarStore.isShow = true
         html.classList.remove('closed')
         html.classList.add('show')
     }
     else
     {
-        teBarStore.isShow = false
         html.classList.remove('show')
         html.classList.add('closed')
     }
 })
-
 watch(() => formData.value.zIndex, (newValue) =>
 {
     console.log('zIndex', newValue);
-    const html = draggableRef.value
+    const html = form.value
     if (!html)
         return
     html.style.zIndex = newValue.toString()
 })
 
-// 播放列表相关
-// 正在播放的行索引(从 0 开始)
-const playingIndex = ref(2)
-
-
 // 窗口拖动相关
-const draggableRef = ref<HTMLElement>(null!)
+const form = ref<HTMLElement>(null!)
 const dragMoveListener = (event: any) => {
     const target = event.target
     let x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
@@ -106,30 +69,17 @@ const dragMoveListener = (event: any) => {
     target.setAttribute('data-x', x)
     target.setAttribute('data-y', y)
 }
-
 onMounted(() => {
-    // formData = formStore.AddForm1(new FormDataModel(AppFormEnum.PlayingListForm, true, 'id?temp=1'))
-    formStore.AddForm(formData.value)
     formData.value.showMinimize = true
     formData.value.showMaximize = false
-    formData.value.showClose = false
+    formData.value.showClose = true
 
-    teBarStore.isShow = true
+    formStore.AddForm(formData.value)
 
-    // 计算窗口显示位置
-    // 获取当前窗口的宽高
-    const width = draggableRef.value.offsetWidth
-    const height = draggableRef.value.offsetHeight
-    const x = (teBarStore.position.x + teBarStore.position.width) - width
-    const y = teBarStore.position.y - height - 18
-    // 设置位置
-    draggableRef.value.style.left = x + 'px'
-    draggableRef.value.style.top = y + 'px'
-
-    interact(draggableRef.value!)
+    interact(form.value!)
         .resizable({
             // 可以从所有边缘和角落进行调整大小
-            edges: { left: false, right: false, bottom: false, top: true },
+            edges: { left: true, right: true, bottom: true, top: true },
             listeners: {
                 move(event) {
                     const target = { value: event.target }
@@ -176,148 +126,9 @@ onMounted(() => {
         });
 })
 
-onUnmounted(() => {
-    teBarStore.isShow = false
-})
-
 </script>
 
 <style scoped>
-.info-o>img {
-    position: relative;
-    top: -80px;
-    filter: drop-shadow(0 80px 0 #adaaaa);
-}
-
-.info-o {
-    width: 28px;
-    height: 36px;
-    cursor: pointer;
-    margin-right: 5px;
-}
-
-span>img {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-}
-
-.info-i {
-    color: #aaaaaa;
-    font-size: 14px;
-    display: flex;
-    /* 垂直布局 */
-    flex-direction: column-reverse;
-    flex-wrap: nowrap;
-    margin-bottom: 5px;
-    margin-left: 5px;
-}
-
-.li-img-playing {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #22222266;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-
-.now-playing {
-    background-color: #5c5c63;
-}
-
-@keyframes audio-wave {
-
-    0%,
-    100% {
-        height: 10px;
-        y: 0;
-    }
-
-    25% {
-        height: 2px;
-        y: 8px;
-    }
-
-    50% {
-        height: 8px;
-        y: 2px;
-    }
-
-    75% {
-        height: 6px;
-        y: 4px;
-    }
-}
-
-.svg-item {
-    fill: #dddddd;
-    animation: audio-wave 1s infinite;
-}
-
-#r1 {
-    animation-delay: 0.2s;
-}
-
-#r2 {
-    animation-delay: 0.4s;
-}
-
-#r3 {
-    animation-delay: 0.6s;
-}
-
-#r4 {
-    animation-delay: 0.8s;
-}
-
-#r5 {
-    animation-delay: 1s;
-}
-
-.info {
-    width: 100%;
-    height: 40px;
-    border-bottom: 1px solid #353539;
-    display: flex;
-    /* 水平布局 */
-    flex-direction: row;
-    /* 显示一行 */
-    flex-wrap: nowrap;
-    /* 贴边平分边距 */
-    justify-content: space-between;
-}
-
-.li-title {
-    color: rgb(208, 218, 228);
-    flex: 1;
-    margin-inline-start: 8px;
-}
-
-.li-po,
-.li-time {
-    color: rgb(168, 173, 177);
-    margin-inline-start: 8px;
-    font-size: 80%;
-}
-
-.li-img>img {
-    width: 100%;
-    height: 100%;
-}
-
-.li-img {
-    position: relative;
-    height: 40px;
-    width: 40px;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
 .from-body li>span {
     display: flex;
     align-items: center;
@@ -376,6 +187,10 @@ span>img {
     overflow: auto;
     display: flex;
     flex-direction: column;
+    margin-top: 0;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;
 }
 
 .from-head-left-text {

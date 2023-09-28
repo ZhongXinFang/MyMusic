@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { ref,watch, onMounted } from 'vue'
 import TeBar from '@/components/TeBar.vue'
-import Form from '@/components/PlayingListForm.vue'
+import PlayingListForm from '@/components/PlayingListForm.vue'
+// import SearchSongForm from '@/components/SearchSongForm.vue'
 import { useSongStore } from '@/stores/SongStore.js'
+import { useUnitStore } from '@/stores/UnitStore.js'
 import { Howl } from 'howler'
-import  BaseForm  from '@/components/FormBase/BaseForm.vue'
+
+const songStore = useSongStore()
+// const unitStore = useUnitStore()
 
 const sound = new Howl({
   src: ['https://localhost:7111/api/SongFile/2B7753B672264B68A909FF432642D6A2.opus'], // 音频文件的URL或路径
@@ -35,7 +39,7 @@ sound.on('play', function () {
   }
 });
 
-const songStore = useSongStore()
+
 watch(() => songStore.playing, (newValue) => {
   if (newValue === true) {
     sound.play()
@@ -51,6 +55,17 @@ watch(() => songStore.ChangeCurrentPercent, (newValue) => {
     songStore.ChangeCurrentTime(null)
   }
 });
+
+// 组件处理相关
+// ['PlayingListForm', 'SearchSongForm']
+ const componentList = ref<any[]>([])
+
+onMounted(() => {
+   componentList.value.push(PlayingListForm)
+
+  // unitStore.componentList.push(unitStore.allUnits.PlayingListForm)
+  // unitStore.componentList.push(unitStore.allUnits.SearchSongForm)
+})
 
 </script>
 <template>
@@ -120,10 +135,13 @@ watch(() => songStore.ChangeCurrentPercent, (newValue) => {
         </ul>
       </div>
     </div>
-    <Form class="from"/>
+    <!-- <PlayingListForm class="from"/>
+    <SearchSongForm class="from"/> -->
+    <template v-for="(component, i) in componentList" :key="i">
+      <component :is="component"></component>
+    </template>
   </div>
   <TeBar />
-  <BaseForm />
 </template>
 
 <style scoped>

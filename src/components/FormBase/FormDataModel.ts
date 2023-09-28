@@ -11,6 +11,8 @@ export class FormDataModel {
     showClose: boolean = true
     // 是否允许手动调整窗口大小
     allowResize: boolean = true
+    // 显示层级
+    zIndex: number = 0
 
     constructor(type: AppFormEnum,
         isShow: boolean,

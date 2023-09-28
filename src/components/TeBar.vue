@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div ref="html">
     <div class="io-box" :class="{ 'io-show': ioShow, 'io-hide': !ioShow }" @mouseleave="IoCurrMouseleavetEvent"
       @mouseenter="IoCurrMouseenterEvent">
       <div class="oter-bar-box oter-bar-box-default" @mouseleave="IoCurrBarMouseenterEvent"
@@ -57,19 +57,27 @@
       </div>
     </div>
     <!-- io 的鼠标移动区域，现在用于实现当鼠标移动到此区域时，控制台显示出来，否则就隐藏 -->
-    <div class="io-curr" @mouseenter="IoCurrMouseenterEvent"></div>
+    <div ref="currIoHtml" class="io-curr" @mouseenter="IoCurrMouseenterEvent"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useFormStore } from '@/stores/FormStore.js'
 import { useSongStore } from '@/stores/SongStore.js'
+import { useTeBarStore } from '@/stores/TeBarStore.js'
 import { PlayModeEnum } from '@/models/PlayModeEnum.ts'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 
+const html = ref<HTMLElement>(null!)
+const currIoHtml = ref<HTMLElement>(null!)
 const songStore = useSongStore()
 const formStore = useFormStore()
+const teBarStore = useTeBarStore()
+
+watch(() => teBarStore.isShow, (newValue) => {
+  ioShowForce.value = newValue
+})
 
 // 弹出播放列表
 const showPlayingList = () => {
@@ -87,6 +95,8 @@ const barItemStyle = ref({
 })
 // 是否显示状态栏
 let ioShow = ref(true)
+// 是否强显示 (外部条件需要状态栏一直保持显示状态，此时暂停常规的隐藏定时器)
+let ioShowForce = ref(false)
 // 是否展开进度条
 let oterBarShow = ref(true)
 // 鼠标离开 io-curr 区域时。用于隐藏 io 控制台的定时器
@@ -152,9 +162,19 @@ const IoCurrMouseleavetEvent = () => {
   if (ioCurrMouseoutTimer !== null) {
     clearTimeout(ioCurrMouseoutTimer)
   }
-  ioCurrMouseoutTimer = setTimeout(() => {
-    ioShow.value = false
-  }, 5000)
+  const showFun = () => {
+    console.log('showFun', ioShowForce.value);
+    if (ioShowForce.value !== true)
+    {
+      ioShow.value = false
+      clearTimeout(ioCurrMouseoutTimer)
+    }
+    else
+      ioCurrMouseoutTimer = setTimeout(() => {
+        showFun()
+      }, 5000)
+  }
+  ioCurrMouseoutTimer = setTimeout(showFun, 5000)
 }
 const IoCurrBarMouseenterEvent = () => {
   oterBarShow.value = false
@@ -178,6 +198,18 @@ const durationFormtTime = computed(() => {
   const second = Math.floor(time / 1000 % 60)
   return `${(minute).toString().padStart(2, '0')}:${(second).toString().padStart(2, '0')}`
 })
+
+onMounted(() => {
+  // 获取 html 的坐标和宽高信息
+  const htmlRect = currIoHtml.value.getBoundingClientRect()
+  teBarStore.position = {
+    x: htmlRect.x,
+    y: htmlRect.y,
+    width: htmlRect.width,
+    height: htmlRect.height
+  }
+})
+
 </script>
 
 <style scoped>
@@ -440,4 +472,5 @@ const durationFormtTime = computed(() => {
   flex-wrap: nowrap;
   align-items: center; */
   transition: 0.5s;
-}</style>
+}
+</style>
