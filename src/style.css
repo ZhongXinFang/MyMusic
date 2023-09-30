@@ -137,6 +137,13 @@ button {
     display: none !important;
 }
 
+/* 隐藏元素但是不卸载 */
+.hidden-visibility {
+    visibility: hidden !important;
+    /* 全透明，避免部分元素没有同步隐藏 */
+    opacity: 0 !important;
+}
+
 .window {
     animation-fill-mode: forwards;
     box-shadow: 3px 3px 20px 3px #22222230;
@@ -171,4 +178,20 @@ button {
     to {
         opacity: 1;
     }
+}
+
+.yPoptip {
+    background-color: #4b494b; 
+    border-radius: 12px;
+    padding: 0 !important;
+    overflow: hidden;
+    box-shadow: 3px 3px 20px 3px #22222230;
+}
+
+.yPoptip .ivu-poptip-arrow {
+    display: none;
+}
+
+.yPoptip .ivu-poptip-inner{
+    background-color: #00000000;
 }

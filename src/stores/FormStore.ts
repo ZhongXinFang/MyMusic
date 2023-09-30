@@ -59,7 +59,7 @@ export const useFormStore = defineStore
             }
         }
         // 寻找是否有指定类型的窗口
-        const FindFormByType = (type: string) => {
+        const FindFormByType = (type: string): (FormDataModel | null) => {
             const item = FormList.value.find((item) => item.type === type)
             return item ?? null
         }

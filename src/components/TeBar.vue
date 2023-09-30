@@ -1,6 +1,6 @@
 <template>
   <div ref="html">
-    <div class="io-box" :class="{ 'io-show': ioShow, 'io-hide': !ioShow }" @mouseleave="IoCurrMouseleavetEvent"
+    <div ref="ioCerHtml" class="io-box" :class="{ 'io-show': ioShow, 'io-hide': !ioShow }" @mouseleave="IoCurrMouseleavetEvent"
       @mouseenter="IoCurrMouseenterEvent">
       <div class="oter-bar-box oter-bar-box-default" @mouseleave="IoCurrBarMouseenterEvent"
         @mouseenter="IoCurrbarMouseenterEvent">
@@ -18,8 +18,8 @@
           <img class="io-play-img" src="@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
         </div>
         <div class="io-play-info-box">
-          <span class="io-play-info-lyric">我却靠在墙壁背我的ABC</span>
-          <span class="io-play-info-title">听妈妈的话 - 周杰伦</span>
+          <span class="io-play-info-lyric">听妈妈的话</span>
+          <span class="io-play-info-title">周杰伦</span>
         </div>
         <div class="io-play-box">
           <span>
@@ -45,7 +45,7 @@
             <img v-show="ioCurrPlayMode === PlayModeEnum.singleLoop" title="单曲循环" @click="togglePlayMode()"
               src="@/assets/icon/playMode-Single.svg" alt="">
           </span>
-          <span title="调整音量">
+          <span ref="volumeSelectHtml" title="调整音量" @click="isShowVolumePoptip = !isShowVolumePoptip">
             <img src="@/assets/icon/volume.svg" alt="">
           </span>
           <span id="io-play-time">
@@ -57,7 +57,16 @@
       </div>
     </div>
     <!-- io 的鼠标移动区域，现在用于实现当鼠标移动到此区域时，控制台显示出来，否则就隐藏 -->
-    <div ref="currIoHtml" class="io-curr" @mouseenter="IoCurrMouseenterEvent"></div>
+    <div ref="currIoHtml" class="io-curr" @mouseenter="IoCurrMouseenterEvent">
+      <!-- 音量调节器 -->
+      <div ref="volumeSelectView" 
+      class="ypipx" 
+      :class="{ 'hidden-visibility': isShowVolumePoptip === false}" 
+      :style="volumeSelectStyle"
+      @mouseleave="IoVolumeMouseleavetEvent">
+       <el-slider v-model="Volume" :show-tooltip="false" vertical height="100px"  :min="0.1" :max="1" :step="0.025"/>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -70,6 +79,9 @@ import { PlayModeEnum } from '@/models/PlayModeEnum.ts'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 
 const html = ref<HTMLElement>(null!)
+const ioCerHtml = ref<HTMLElement>(null!)
+const volumeSelectHtml = ref<HTMLElement>(null!)
+const volumeSelectView = ref<HTMLElement>(null!)
 const currIoHtml = ref<HTMLElement>(null!)
 const songStore = useSongStore()
 const formStore = useFormStore()
@@ -78,6 +90,42 @@ const teBarStore = useTeBarStore()
 watch(() => teBarStore.isShow, (newValue) => {
   ioShowForce.value = newValue
 })
+
+// 是否显示音量调整气泡
+const isShowVolumePoptip = ref(false)
+// 音量调节器的 style 对象
+const volumeSelectStyle = ref({
+  left: '600px',
+  top: '0px'
+})
+
+// 音量
+const Volume = ref(0.3)
+
+watch(() => isShowVolumePoptip.value, (newValue) => {
+  if (newValue === true) {
+    const ioCerHtmlRect = ioCerHtml.value.getBoundingClientRect()
+    const htmlRect = volumeSelectHtml.value.getBoundingClientRect()
+    const viewRect = volumeSelectView.value.getBoundingClientRect()
+    console.log(htmlRect, viewRect);
+    const htmlRectX = ioCerHtmlRect.width - (ioCerHtmlRect.width - (htmlRect.x - ioCerHtmlRect.x)) - viewRect.width/4
+    const htmlRectY = - (viewRect.height + 10)
+    volumeSelectStyle.value.left = htmlRectX + 'px'
+    volumeSelectStyle.value.top = htmlRectY + 'px'
+    console.log(htmlRectX, htmlRectY);
+  }
+})
+// 音量控制器自动隐藏
+const ioVolumeMouseoutTimer = ref<number|null>(null)
+const IoVolumeMouseleavetEvent = () => {
+  if (ioVolumeMouseoutTimer.value !== null) {
+    clearTimeout(ioVolumeMouseoutTimer.value)
+  }
+  // 3秒后隐藏
+  ioCurrMouseoutTimer = setTimeout(() => {
+    isShowVolumePoptip.value = false
+  }, 3000)
+}
 
 // 弹出播放列表
 const showPlayingList = () => {
@@ -164,8 +212,7 @@ const IoCurrMouseleavetEvent = () => {
   }
   const showFun = () => {
     console.log('showFun', ioShowForce.value);
-    if (ioShowForce.value !== true)
-    {
+    if (ioShowForce.value !== true) {
       ioShow.value = false
       clearTimeout(ioCurrMouseoutTimer)
     }
@@ -208,11 +255,30 @@ onMounted(() => {
     width: htmlRect.width,
     height: htmlRect.height
   }
+
+  console.log(volumeSelectHtml.value.getBoundingClientRect());
+  
 })
 
 </script>
 
 <style scoped>
+
+.ypipx{
+  width: 50px;
+  height: 120px;
+  background-color: #4b494b;
+  border-radius: 8px;
+  overflow: hidden;
+  position: absolute;
+  top: -200px;
+  box-shadow: 3px 3px 20px 3px #22222230;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+}
+
 .io-play-right-oper {
   flex: 1;
   margin-right: 10px;

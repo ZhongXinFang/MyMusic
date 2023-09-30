@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { ref,watch, onMounted } from 'vue'
+import { ref, shallowReactive , watch, onMounted, onUnmounted } from 'vue'
 import TeBar from '@/components/TeBar.vue'
 import PlayingListForm from '@/components/PlayingListForm.vue'
-// import SearchSongForm from '@/components/SearchSongForm.vue'
+import SearchSongForm from '@/components/SearchSongForm.vue'
+import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
+import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 import { useSongStore } from '@/stores/SongStore.js'
-import { useUnitStore } from '@/stores/UnitStore.js'
+import { useFormStore } from '@/stores/FormStore.js'
+import api from '@/httpUnit/SongAPI.ts'
+// import { useUnitStore } from '@/stores/UnitStore.js'
 import { Howl } from 'howler'
 
+const formStore = useFormStore()
 const songStore = useSongStore()
 // const unitStore = useUnitStore()
 
@@ -39,7 +44,6 @@ sound.on('play', function () {
   }
 });
 
-
 watch(() => songStore.playing, (newValue) => {
   if (newValue === true) {
     sound.play()
@@ -58,14 +62,40 @@ watch(() => songStore.ChangeCurrentPercent, (newValue) => {
 
 // 组件处理相关
 // ['PlayingListForm', 'SearchSongForm']
- const componentList = ref<any[]>([])
+const componentList = shallowReactive<any[]>([])
 
-onMounted(() => {
-   componentList.value.push(PlayingListForm)
-
+onMounted(async () => {
+  componentList.push(PlayingListForm)
+  componentList.push(SearchSongForm)
+  document.addEventListener('click', hideMenu);
   // unitStore.componentList.push(unitStore.allUnits.PlayingListForm)
   // unitStore.componentList.push(unitStore.allUnits.SearchSongForm)
+
+  await api.songAPI('123')
 })
+
+onUnmounted(() => {
+  document.removeEventListener('click', hideMenu);
+})
+
+const menuTop = ref(0)
+const menuLeft = ref(0)
+const menuisShow = ref(false)
+const showMenu = (e: any) => {
+  menuTop.value = e.clientY;
+  menuLeft.value = e.clientX;
+  menuisShow.value = true;
+}
+const hideMenu = () => {
+  menuisShow.value = false;
+}
+
+const showPlaying = () => {
+  const form: FormDataModel | null = formStore.FindFormByType(AppFormEnum.PlayingListForm)
+  if (form === null) 
+    return
+  formStore.Show(form.id)
+}
 
 </script>
 <template>
@@ -74,7 +104,12 @@ onMounted(() => {
       <img class="main-background-img" src="@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg">
     </div>
   </div>
-  <div class="content">
+  <div class="content" @contextmenu.prevent="showMenu($event)">
+    <div v-show="menuisShow" :style="{ top: `${menuTop}px`, left: `${menuLeft}px` }" class="menu">
+      <div @click="showPlaying">播放列表</div>
+      <div>歌曲列表</div>
+      <div>上传歌曲</div>
+    </div>
     <div class="head">
       <span class="head-title">听妈妈的话</span>
       <div class="head-base-info">
@@ -135,16 +170,36 @@ onMounted(() => {
         </ul>
       </div>
     </div>
-    <!-- <PlayingListForm class="from"/>
-    <SearchSongForm class="from"/> -->
     <template v-for="(component, i) in componentList" :key="i">
       <component :is="component"></component>
     </template>
+    <!-- <component :is="PlayingListForm"></component> -->
+    <component :is="SearchSongForm"></component>
   </div>
   <TeBar />
 </template>
 
 <style scoped>
+.menu {
+  position: absolute;
+  background-color: #6f6b6f;
+  /* border: 1px solid black; */
+  z-index: 9999; /* make sure it's on top */
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.menu>div {
+  padding: 5px 10px;
+  cursor: pointer;
+  color: aliceblue;
+}
+
+.menu>div:hover {
+  background-color: #4b494b;
+}
+
 .from {
   position: absolute;
   top: 10px;

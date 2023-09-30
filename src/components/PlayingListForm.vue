@@ -406,6 +406,7 @@ span>img {
 .from-head-io-button {
     background-color: #00000000;
     border-radius: 0;
+    padding-inline: 10px;
 }
 
 .from-head {
