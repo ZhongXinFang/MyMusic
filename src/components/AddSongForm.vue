@@ -2,7 +2,7 @@
     <div ref="form" class="from window open-closed" @mousedown="formStore.BringToTop(formData.id)">
         <div class="from-head">
             <div class="from-head-left">
-                <span class="from-head-left-text">歌曲列表</span>
+                <span class="from-head-left-text">上传歌曲</span>
             </div>
             <div class="from-head-right">
                 <button @click="formData.isShow = false" title="隐藏窗口" class="from-head-io-button"
@@ -12,36 +12,60 @@
                 <button title="放大窗口" class="from-head-io-button" v-show="formData.showMaximize">
                     <img src="@/assets/icon/最大化.svg" alt="">
                 </button>
-                <button title="关闭窗口" class="from-head-io-button" v-show="formData.showClose">
+                <button @click="formData.isShow = false" title="关闭窗口" class="from-head-io-button"
+                    v-show="formData.showClose">
                     <img src="@/assets/icon/关闭.svg" alt="">
                 </button>
             </div>
         </div>
-        <div class="from-body">
+        <div class="from-body" @mousedown.stop>
             <div class="search-box">
-                <Input search enter-button placeholder="输入歌曲名称" />
+                <div class="song-up">
+                    <el-upload :action="baseUrl + '/SongFile/AddMusicFile'" :headers="headers"
+                        :on-success="UpSongFileSuccess" :before-upload="UpSongFileBefore" :limit="1">
+                        <el-button slot="trigger" size="small" type="primary">上传歌曲文件</el-button>
+                    </el-upload>
+                </div>
+                <div class="song-up">
+                    <el-upload :action="baseUrl + '/SongFile/AddMusicFile'" :headers="headers"
+                        :on-success="UpLyricFileSuccess" :before-upload="UpLyricFileBefore" :limit="1">
+                        <el-button slot="trigger" size="small" type="primary">上传歌词文件(.lrc)</el-button>
+                    </el-upload>
+                </div>
+                <div class="song-up">
+                    <el-upload :action="baseUrl + '/SongFile/AddMusicFile'" :headers="headers"
+                        :on-success="UpImgFileSuccess" :before-upload="UpImgFileBefore" :limit="1">
+                        <el-button slot="trigger" size="small" type="primary">上传封面文件</el-button>
+                    </el-upload>
+                </div>
             </div>
             <div class="res-box">
-                <ul>
-                <li v-for="_ in 20" title="🎶">
-                    <span class="li-img">
-                        <img src="@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
-                    </span>
-                    <span>
-                    </span>
-                    <span class="li-title">听妈妈的话<span class="li-po">周杰伦</span></span>
-                    <div class="io">
-                        <span class="add-list">
-                            <img title="添加到播放列表" class="io-play" src="@/assets/icon/增加添加加号.svg" alt="">
-                        </span>
-                        <span>
-                            <img title="立即播放" class="io-play" src="@/assets/icon/播放.svg" alt="">
-                        </span>
-                    </div>
-                    <!-- <span class="li-time">04:05</span> -->
-                </li>
-            </ul>
-            <div class="page"><Page :total="100" simple size="small" /></div>
+                <el-form label-position="top" label-width="100px" :inline ="true" :model="songInfo">
+                    <el-form-item label="歌曲名称" class="a1">
+                        <el-input v-model="songInfo.title" />
+                    </el-form-item>
+                    <el-form-item label="专辑">
+                        <el-input v-model="songInfo.Album" />
+                    </el-form-item>
+                    <el-form-item label="发行日期">
+                        <el-input v-model="songInfo.Publicationdate" />
+                    </el-form-item>
+                    <el-form-item label="歌手">
+                        <el-input v-model="songInfo.ArtistId" />
+                    </el-form-item>
+                    <el-form-item label="作曲家">
+                        <el-input v-model="songInfo.ComposerArtistId" />
+                    </el-form-item>
+                    <el-form-item label="作词家">
+                        <el-input v-model="songInfo.LyricistArtistId" />
+                    </el-form-item>
+                </el-form>
+            </div>
+            <div class="bom-box">
+                <a class="addpr">添加艺术家</a>
+                <el-button type="primary" size="small">取消</el-button>
+                <el-button type="primary" size="small">提交</el-button>
+                <span title="因为还有其他功能没有开放，好吧确实就是..." class="addpr-info">为什么这么丑？</span>
             </div>
         </div>
     </div>
@@ -50,32 +74,86 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import interact from 'interactjs'
+import { ElMessage } from 'element-plus'
 import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 import { useFormStore } from '@/stores/FormStore.js'
+import { baseUrl } from '@/httpUnit/APIBase.ts'
 
 const formStore = useFormStore()
-const formData = ref<FormDataModel>(new FormDataModel(AppFormEnum.SearchSongForm, false, 'id?'))
+const formData = ref<FormDataModel>(new FormDataModel(AppFormEnum.AddSongForm, false, 'id?AddSongForm'))
+
+const headers = {
+    Authorization: ""
+}
+
+const songInfo = ref<any>({
+    Title: "",  // 歌曲名称
+    ArtistId: "", // 歌手ID
+    Album: "", // 专辑
+    Publicationdate: "", //  发行日期
+    ComposerArtistId: "", // 作曲家
+    LyricistArtistId: "", // 作词家
+})
+
+// 歌曲文件上传成功
+const UpSongFileSuccess = (response: any) => {
+    console.log(response);
+}
+// 歌曲文件上传前检查
+const UpSongFileBefore = (rawFile: any) => {
+    console.log(rawFile);
+    const fileType: string = rawFile.type
+    if (fileType.indexOf('audio') < 0) {
+        ElMessage.error("请选择音频文件，如 .mp3,.opus 等")
+        return false
+    }
+}
+
+// 歌词文件上传成功
+const UpLyricFileSuccess = (response: any) => {
+    console.log(response);
+}
+// 歌词文件上传前检查
+const UpLyricFileBefore = (rawFile: any) => {
+    console.log(rawFile);
+    const fileName: string = rawFile.name
+    if (fileName.indexOf('lrc') < 0) {
+        ElMessage.error("请选择 lrc 歌词文件,暂时只支持 lrc 格式的歌词")
+        return false
+    }
+}
+
+// 封面文件上传成功
+const UpImgFileSuccess = (response: any) => {
+    console.log(response);
+}
+// 封面文件上传前检查
+const UpImgFileBefore = (rawFile: any) => {
+    console.log(rawFile);
+    const fileType: string = rawFile.type
+    if (fileType.indexOf('image') < 0) {
+        ElMessage.error("请选择图片文件，如 .jpg,.png 等")
+        return false
+    }
+}
 
 // 窗口显示相关
 watch(() => formData.value.isShow, (newvalue) => {
     const html = form.value
     if (!html)
         return
-    if (newvalue === true)
-    {
+    if (newvalue === true) {
         html.classList.remove('closed')
         html.classList.remove('open-closed')
         html.classList.add('show')
     }
-    else
-    {
+    else {
         html.classList.remove('show')
         html.classList.add('closed')
     }
 })
-watch(() => formData.value.zIndex, (newValue) =>
-{
+watch(() => formData.value.zIndex, (newValue) => {
     const html = form.value
     if (!html)
         return
@@ -96,14 +174,14 @@ const dragMoveListener = (event: any) => {
 onMounted(() => {
     formData.value.showMinimize = true
     formData.value.showMaximize = false
-    formData.value.showClose = false
+    formData.value.showClose = true
 
     formStore.AddForm(formData.value)
-
+    formData.value.isShow = true
     interact(form.value!)
         .resizable({
             // 可以从所有边缘和角落进行调整大小
-            edges: { left: true, right: true, bottom: true, top: true },
+            edges: { left: true, right: true, bottom: true, top: false },
             listeners: {
                 move(event) {
                     const target = { value: event.target }
@@ -141,6 +219,7 @@ onMounted(() => {
         .draggable({
             listeners: { move: dragMoveListener },
             inertia: true,
+            ignoreFrom: '.from-body',
             modifiers: [
                 interact.modifiers.restrictRect({
                     restriction: 'parent',
@@ -148,21 +227,93 @@ onMounted(() => {
                 })
             ]
         });
+
+    // 读取 token
+    const token = localStorage.getItem('token');
+    headers.Authorization = 'bearer ' + token;
 })
 
 </script>
 
 <style scoped>
-.add-list{
+
+.addpr-info{
+    color: rgb(168, 170, 172);
+    cursor: pointer;
+}
+
+.addpr-info:hover{
+    /* 添加下划线 */
+    text-decoration: underline;
+}
+
+.addpr{
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+}
+
+.bom-box>*{
+    margin-inline: 5px;
+}
+
+.bom-box{
+    position: relative;
+    min-height: 80px;
+    display: flex;
+    /* 从右向左 */
+    flex-direction: row-reverse;
+    flex-wrap:nowrap;
+    /* 垂直向下 */
+    align-items: flex-end;
+    padding: 10px;
+}
+
+.res-box >>> .el-form-item__label{
+    color: #fff !important;
+}
+
+.res-box >>> input,
+.res-box >>> .el-form-item__content,
+.res-box >>> .el-input__wrapper
+{
+    background-color: #353539;
+    color: #eee;
+}
+
+.res-box{
+    margin-inline: 10px;
+}
+
+.song-up {
+    background-color: #d9d4cf;
+    padding: 10px;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 300px;
+    min-height: 90px;
+    margin-left: 10px;
+}
+
+/* .song-up:nth-child(1)
+{
+    background-color: #d4dfe6;
+}
+.song-up:nth-child(2)
+{
+    background-color: #d4dfe6;
+} */
+
+.add-list {
     height: 25px;
     width: 25px;
 }
 
-.io > span{
+.io>span {
     margin-inline-start: 5px;
 }
 
-.io{
+.io {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -173,16 +324,16 @@ onMounted(() => {
     margin-inline-start: 5px;
 }
 
-.io-play{
+.io-play {
     width: 20px;
 }
 
-span>img{
+span>img {
     width: 100%;
     height: 100%;
 }
 
-.page{
+.page {
     margin-top: 10px;
     margin-bottom: 10px;
     display: flex;
@@ -270,17 +421,19 @@ span>img{
     border-radius: 10px;
 }
 
-.res-box{
+.res-box {
     margin-top: 10px;
     height: 100%;
     overflow-y: auto;
 }
 
-.search-box{
+.search-box {
     width: 90%;
     margin-inline: auto;
     margin-top: 10px;
+    display: flex;
 }
+
 .from-body li>span {
     display: flex;
     align-items: center;
@@ -343,6 +496,8 @@ span>img{
     margin-left: 5px;
     margin-right: 5px;
     margin-bottom: 5px;
+    border-radius: 8px;
+    padding: 5px;
 }
 
 .from-head-left-text {
@@ -391,11 +546,12 @@ span>img{
     position: absolute;
     min-width: 300px;
     min-height: 200px;
-    width: 320px;
-    height: 480px;
     background: #4b494b no-repeat fixed center;
     border-radius: 12px;
     overflow: hidden;
+
+    width: 760px;
+    height: 560px;
 
     display: flex;
     /* 垂直布局 */

@@ -5,4 +5,6 @@ export enum AppFormEnum {
     PlayingListForm = "PlayingListForm",
     // 歌曲搜索窗口
     SearchSongForm = "SearchSongForm",
+    // 上传音乐窗口
+    AddSongForm = "AddSongForm",
 }

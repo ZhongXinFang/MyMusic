@@ -144,6 +144,12 @@ button {
     opacity: 0 !important;
 }
 
+/* 用于刚开始就不显示窗口 */
+.open-closed {
+    opacity: 0;
+    display: none;
+}
+
 .window {
     animation-fill-mode: forwards;
     box-shadow: 3px 3px 20px 3px #22222230;
@@ -181,7 +187,7 @@ button {
 }
 
 .yPoptip {
-    background-color: #4b494b; 
+    background-color: #4b494b;
     border-radius: 12px;
     padding: 0 !important;
     overflow: hidden;
@@ -192,6 +198,6 @@ button {
     display: none;
 }
 
-.yPoptip .ivu-poptip-inner{
+.yPoptip .ivu-poptip-inner {
     background-color: #00000000;
 }

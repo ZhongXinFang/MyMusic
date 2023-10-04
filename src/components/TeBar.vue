@@ -107,12 +107,10 @@ watch(() => isShowVolumePoptip.value, (newValue) => {
     const ioCerHtmlRect = ioCerHtml.value.getBoundingClientRect()
     const htmlRect = volumeSelectHtml.value.getBoundingClientRect()
     const viewRect = volumeSelectView.value.getBoundingClientRect()
-    console.log(htmlRect, viewRect);
     const htmlRectX = ioCerHtmlRect.width - (ioCerHtmlRect.width - (htmlRect.x - ioCerHtmlRect.x)) - viewRect.width/4
     const htmlRectY = - (viewRect.height + 10)
     volumeSelectStyle.value.left = htmlRectX + 'px'
     volumeSelectStyle.value.top = htmlRectY + 'px'
-    console.log(htmlRectX, htmlRectY);
   }
 })
 // 音量控制器自动隐藏
@@ -211,7 +209,6 @@ const IoCurrMouseleavetEvent = () => {
     clearTimeout(ioCurrMouseoutTimer)
   }
   const showFun = () => {
-    console.log('showFun', ioShowForce.value);
     if (ioShowForce.value !== true) {
       ioShow.value = false
       clearTimeout(ioCurrMouseoutTimer)
@@ -254,10 +251,7 @@ onMounted(() => {
     y: htmlRect.y,
     width: htmlRect.width,
     height: htmlRect.height
-  }
-
-  console.log(volumeSelectHtml.value.getBoundingClientRect());
-  
+  }  
 })
 
 </script>

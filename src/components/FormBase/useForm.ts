@@ -20,7 +20,6 @@ export function useForm() {
     // 当前是否显示
     const isShow = ref(true)
     watch(isShow, (newValue) => {
-        console.log('isShow',newValue);
         if (newValue === true) {
             Show()
         }

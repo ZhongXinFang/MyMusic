@@ -5,6 +5,9 @@ import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
 export const useFormStore = defineStore
     ("FormStore", () => {
 
+        // 当前登录是否有效
+        const isLogin = ref<boolean>(false)
+
         // 当前顶级窗口的层级
         let zIndexMax = ref<number>(1)
 
@@ -60,13 +63,13 @@ export const useFormStore = defineStore
         }
         // 寻找是否有指定类型的窗口
         const FindFormByType = (type: string): (FormDataModel | null) => {
+            console.log(FormList.value)
             const item = FormList.value.find((item) => item.type === type)
             return item ?? null
         }
         // 将指向窗口切换到顶层显示
         const BringToTop = (id: string) => {
             const item = FormList.value.find((item) => item.id === id) ?? null
-            console.log('BringToTop', id, item);
             if (item && item.zIndex !== zIndexMax.value) {
                 item.zIndex = ++zIndexMax.value
             }
@@ -74,7 +77,6 @@ export const useFormStore = defineStore
 
         const BringToTop1 = (id: string) => {
             const item = FormList1.find((item) => item.value.id === id)?.value ?? null
-            console.log('BringToTop1', id, item);
             if (item && item.zIndex !== zIndexMax.value) {
                 item.zIndex = ++zIndexMax.value
             }
@@ -90,5 +92,6 @@ export const useFormStore = defineStore
             FindFormByType,
             BringToTop,
             BringToTop1,
+            isLogin,
         }
     })  

@@ -1,15 +1,20 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-
+import axios, { AxiosResponse } from 'axios';
+import { emitter } from '@/mitt/mitt.ts';
+const baseURL = 'https://localhost:7111/api';
 // 创建一个 Axios 实例
 const instance = axios.create({
-  baseURL: 'https://www.baidu.com', // 设置基础 URL
+  baseURL: baseURL, // 设置基础 URL
   timeout: 20000, // 设置请求超时时间
 });
 
 // 请求拦截器
 instance.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: any) => {
     // 在发送请求之前做一些处理，例如添加认证信息等
+    config.headers['Content-Type'] = 'application/json;charset=UTF-8';
+    const token = localStorage.getItem('token');
+    if (token !== null)
+      config.headers['Authorization'] = 'bearer ' + token;
     return config;
   },
   (error: any) => {
@@ -21,13 +26,33 @@ instance.interceptors.request.use(
 // 响应拦截器
 instance.interceptors.response.use(
   (response: AxiosResponse) => {
-    // 对响应数据进行处理
-    return response.data;
+    const { headers } = response;
+    if (headers['authorizationtoken'] !== undefined) {
+      localStorage.setItem('token', headers['authorizationtoken']);
+      emitter.emit('login', true)
+    }
+    return response;
   },
   (error: any) => {
-    // 处理响应错误
+
+    const { response } = error;
+    if (!response)
+      return Promise.reject(error);
+
+    // 无网络连接
+    if (!window.navigator.onLine) {
+      return;
+    }
+    
+    switch (response.status) {
+      case 401:
+        // Token 过期或者未认证
+        emitter.emit('login', false)
+        break;
+    }
     return Promise.reject(error);
   }
 );
 
 export default instance;
+export const baseUrl = baseURL

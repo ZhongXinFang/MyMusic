@@ -1,5 +1,5 @@
 <template>
-    <div ref="draggableRef" class="from window" @mousedown="formStore.BringToTop(formData.id)">
+    <div ref="draggableRef" class="from window closed open-closed" @mousedown="formStore.BringToTop(formData.id)">
         <div class="from-head">
             <div class="from-head-left">
                 <span class="from-head-left-text">播放列表</span>
@@ -58,19 +58,17 @@ import { useFormStore } from '@/stores/FormStore.js'
 
 const teBarStore = useTeBarStore()
 const formStore = useFormStore()
-// let formData: Ref<FormDataModel> = formStore.AddForm1(new FormDataModel(AppFormEnum.PlayingListForm, true, 'id?temp=1'))
-// let formData: Ref<FormDataModel> | Ref<null> | null = null;
-let formData = ref(new FormDataModel(AppFormEnum.PlayingListForm, true, 'id?temp=1'))
+let formData = ref(new FormDataModel(AppFormEnum.PlayingListForm, false, 'id?temp=1'))
 // 窗口显示相关
 watch(() => formData.value.isShow, (newvalue) => {
     const html = draggableRef.value
-    console.log('isShow', newvalue);
     if (!html)
         return
     if (newvalue === true)
     {
         teBarStore.isShow = true
         html.classList.remove('closed')
+        html.classList.remove('open-closed')
         html.classList.add('show')
     }
     else
@@ -83,7 +81,6 @@ watch(() => formData.value.isShow, (newvalue) => {
 
 watch(() => formData.value.zIndex, (newValue) =>
 {
-    console.log('zIndex', newValue);
     const html = draggableRef.value
     if (!html)
         return
@@ -93,7 +90,6 @@ watch(() => formData.value.zIndex, (newValue) =>
 // 播放列表相关
 // 正在播放的行索引(从 0 开始)
 const playingIndex = ref(2)
-
 
 // 窗口拖动相关
 const draggableRef = ref<HTMLElement>(null!)
@@ -108,7 +104,6 @@ const dragMoveListener = (event: any) => {
 }
 
 onMounted(() => {
-    // formData = formStore.AddForm1(new FormDataModel(AppFormEnum.PlayingListForm, true, 'id?temp=1'))
     formStore.AddForm(formData.value)
     formData.value.showMinimize = true
     formData.value.showMaximize = false
@@ -424,6 +419,8 @@ span>img {
     position: absolute;
     min-width: 300px;
     min-height: 200px;
+    width: 320px;
+    height: 480px;
     background: #4b494b no-repeat fixed center;
     border-radius: 12px;
     overflow: hidden;
