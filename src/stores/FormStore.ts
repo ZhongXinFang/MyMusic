@@ -1,31 +1,23 @@
-import { ref, Ref } from 'vue'
+import { ref, shallowReactive } from 'vue'
 import { defineStore } from 'pinia'
 import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
+import { ComponentClass } from '@/models/ComponentClass.ts'
+import { UnitEnum } from '@/models/UnitEnum.ts'
+import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 
 export const useFormStore = defineStore
     ("FormStore", () => {
-
-        // 当前登录是否有效
-        const isLogin = ref<boolean>(false)
-
         // 当前顶级窗口的层级
         let zIndexMax = ref<number>(1)
 
         // 当前显示的窗口集合
         const FormList = ref<Array<FormDataModel>>([])
-        const FormList1 = Array<Ref<FormDataModel>>()
+        // 当前显示的窗口关联的组件示例集合
+        const componentList = shallowReactive<ComponentClass[]>([])
 
-        const AddForm1 = (model: FormDataModel): Ref<FormDataModel> => {
-            const index = FormList1.find((item) => item.value.id === model.id) ?? null
-            if (index !== null)
-                return index
-            const item = ref<FormDataModel>(model)
-            FormList1.push(item)
-            return item
-        }
-
+        /// 窗口控制
         // 添加窗口
-        const AddForm = (model: FormDataModel)=> {
+        const AddForm = (model: FormDataModel) => {
             const index = FormList.value.findIndex((item) => item.id === model.id)
             if (index < 0) {
                 FormList.value.push(model)
@@ -61,6 +53,28 @@ export const useFormStore = defineStore
                 item.zIndex = ++zIndexMax.value
             }
         }
+
+        /// 组件控制
+        // 关闭窗口(卸载组件)
+        const CloneForm = (id: string) => {
+            const index = componentList.findIndex(x => x.id === id)
+            if (index < 0)
+                return
+            RemoveForm(id)
+            componentList.splice(index, 1)
+        }
+        // 添加组件
+        const AddCom = (obj: ComponentClass): void => {
+            if (!obj)
+                return
+            componentList.push(obj)
+        }
+        // 创建组件
+        const CreateCom = (type: AppFormEnum): void => {
+            const com = UnitEnum[(type.toString() + 'Unit') as keyof typeof UnitEnum]
+            componentList.push(new ComponentClass('111',com))
+        }
+
         // 寻找是否有指定类型的窗口
         const FindFormByType = (type: string): (FormDataModel | null) => {
             console.log(FormList.value)
@@ -75,23 +89,17 @@ export const useFormStore = defineStore
             }
         }
 
-        const BringToTop1 = (id: string) => {
-            const item = FormList1.find((item) => item.value.id === id)?.value ?? null
-            if (item && item.zIndex !== zIndexMax.value) {
-                item.zIndex = ++zIndexMax.value
-            }
-        }
-
         return {
             AddForm,
-            AddForm1,
             RemoveForm,
             Show,
             Hide,
             Toggle,
             FindFormByType,
             BringToTop,
-            BringToTop1,
-            isLogin,
+            AddCom,
+            CloneForm,
+            CreateCom,
+            componentList,
         }
     })  

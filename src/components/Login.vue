@@ -112,6 +112,7 @@
 </template>
   
 <script setup lang="ts">
+// 这些 class 后面开放注册后需要提取到单独文件中去
 class LoginByPasswordClass {
     Email: string = '演示账号@MyMusic.com'
     Password: string = 'string'
@@ -167,7 +168,7 @@ const StartVerificationCodeTime = (obj: LoginByVerificationCodeClass | RegisterC
     obj.VerificationCodeTime = 59
 }
 
-const LoginEmailInputBlurEvent = async (_: FocusEvent) => {
+const LoginEmailInputBlurEvent = async () => {
     const req = new AccountVerificationReqDto()
     req.Email = LoginByPasswordObj.value.Email
     const res: AccountVerificationResDto | null = await AccountVerification(req)
@@ -214,7 +215,7 @@ onMounted(() => {
         }
 
     }, 1000)
-    LoginEmailInputBlurEvent(null)
+    LoginEmailInputBlurEvent()
 })
 
 onUnmounted(() => {

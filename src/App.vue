@@ -1,27 +1,31 @@
 <script setup lang="ts">
-import { ref, shallowReactive, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { Howl } from 'howler'
+import { emitter } from '@/mitt/mitt.ts';
 import TeBar from '@/components/TeBar.vue'
 import Login from '@/components/Login.vue'
-import SearchSongForm from '@/components/SearchSongForm.vue'
-import PlayingListForm from '@/components/PlayingListForm.vue'
-import AddSongForm from '@/components/AddSongForm.vue'
-import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
-import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
-import { useSongStore } from '@/stores/SongStore.js'
-import { useFormStore } from '@/stores/FormStore.js'
-import { emitter } from '@/mitt/mitt.ts';
-import { dbSongModel } from '@/db/dbModels/dbSongModel.ts'
-import { Howl } from 'howler'
 import { SongService } from '@/db/SongService.ts'
+import { useFormStore } from '@/stores/FormStore.js'
+import { useSongStore } from '@/stores/SongStore.js'
+import AddSongForm from '@/components/AddSongForm.vue'
+import { dbSongModel } from '@/db/dbModels/dbSongModel.ts'
+import SearchSongForm from '@/components/SearchSongForm.vue'
+import { generateGuid } from '@/tools/tool.ts'
+import PlayingListForm from '@/components/PlayingListForm.vue'
+import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
+import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
+import { ComponentClass } from '@/models/ComponentClass.ts'
 
 const formStore = useFormStore()
 const songStore = useSongStore()
 
+// 用户登录相关
 const isLogin = ref(true)
 emitter.on('login', (message) => {
   isLogin.value = message as boolean
 })
 
+// 播放器控制相关
 let sound: Howl = null!
 // 监听进度改变定时器 ts
 let ioCurrPlayTimeTimer: number | null = null
@@ -42,16 +46,12 @@ watch(() => songStore.ChangeCurrentPercent, (newValue) => {
   }
 });
 
-// 组件处理相关
-// ['PlayingListForm', 'SearchSongForm']
-const componentList = shallowReactive<any[]>([])
-
+// 生命周期钩子
 onMounted(async () => {
-  componentList.push(PlayingListForm)
-  componentList.push(SearchSongForm)
-  componentList.push(AddSongForm)
+  formStore.AddCom(new ComponentClass(generateGuid(), PlayingListForm))
+  formStore.AddCom(new ComponentClass(generateGuid(), SearchSongForm))
+  formStore.AddCom(new ComponentClass(generateGuid(), AddSongForm))
   document.addEventListener('click', hideMenu);
-
   sound = new Howl({
     src: [' Bouncy Castle '], // 音频文件的URL或路径
     autoplay: false, // 自动播放
@@ -86,9 +86,9 @@ onMounted(async () => {
   const song = await db.GetSongById("1")
   console.log(song);
 })
-
 onUnmounted(() => {
   document.removeEventListener('click', hideMenu);
+  emitter.off("login");
 })
 
 // 右键菜单相关
@@ -103,29 +103,18 @@ const showMenu = (e: any) => {
 const hideMenu = () => {
   menuisShow.value = false;
 }
-
 // 右键菜单功能相关
-const showPlaying = () => {
-  const form: FormDataModel | null = formStore.FindFormByType(AppFormEnum.PlayingListForm)
-  if (form === null)
+const showForm = (type: AppFormEnum) => {
+  const form: FormDataModel | null = formStore.FindFormByType(type)
+  if (form === null) {
+    formStore.CreateCom(type)
     return
-  formStore.Show(form.id)
-}
-const showSongList = () => {
-  const form: FormDataModel | null = formStore.FindFormByType(AppFormEnum.SearchSongForm)
-  console.log(form);
-  if (form === null)
-    return
-  formStore.Show(form.id)
-}
-const showAddSong = () => {
-  const form: FormDataModel | null = formStore.FindFormByType(AppFormEnum.AddSongForm)
-  if (form === null)
-    return
+  }
   formStore.Show(form.id)
 }
 
 </script>
+
 <template>
   <div v-if="isLogin">
     <div class="main-background">
@@ -135,9 +124,9 @@ const showAddSong = () => {
     </div>
     <div class="content" @contextmenu.prevent="showMenu($event)">
       <div v-show="menuisShow" :style="{ top: `${menuTop}px`, left: `${menuLeft}px` }" class="menu">
-        <div @click="showPlaying">播放列表</div>
-        <div @click="showSongList">歌曲列表</div>
-        <div @click="showAddSong">上传歌曲</div>
+        <div @click="showForm(AppFormEnum.PlayingListForm)">播放列表</div>
+        <div @click="showForm(AppFormEnum.SearchSongForm)">歌曲列表</div>
+        <div @click="showForm(AppFormEnum.AddSongForm)">上传歌曲</div>
       </div>
       <div class="head">
         <span class="head-title">听妈妈的话</span>
@@ -199,8 +188,8 @@ const showAddSong = () => {
           </ul>
         </div>
       </div>
-      <template v-for="(component) in componentList">
-        <component :is="component"></component>
+      <template v-for="component in formStore.componentList" :key="component.id">
+        <component :is="component.component" :id="component.id"></component>
       </template>
     </div>
     <TeBar />
@@ -212,9 +201,7 @@ const showAddSong = () => {
 .menu {
   position: absolute;
   background-color: #6f6b6f;
-  /* border: 1px solid black; */
   z-index: 9999;
-  /* make sure it's on top */
   border-radius: 5px;
   overflow: hidden;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
@@ -229,14 +216,6 @@ const showAddSong = () => {
 .menu>div:hover {
   background-color: #4b494b;
 }
-
-/* .from {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 320px;
-  height: 480px;
-} */
 
 .head-base-info>span {
   min-width: 50px;
@@ -277,24 +256,17 @@ const showAddSong = () => {
   height: 100%;
 }
 
-
 .head {
   min-width: 380px;
   min-height: 60px;
   max-height: 30%;
-  /* 绝对定位 */
   position: absolute;
-  /* 水平居中 */
   left: 50%;
   transform: translateX(-50%);
-  /* 与父元素底部相距 20px */
   top: 40px;
-  /* 圆角 */
   border-radius: 20px;
-  /* background-color: rgba(255, 255, 255, 0.5); */
 
   display: flex;
-  /* 垂直布局 */
   flex-direction: column;
 }
 
@@ -325,7 +297,6 @@ const showAddSong = () => {
 }
 
 .cover>img {
-  /* 宽是父元素宽高中比较小的一半 */
   width: 220px;
   height: 220px;
 }
@@ -333,15 +304,10 @@ const showAddSong = () => {
 .cover {
   width: 38%;
   height: 100%;
-  /* background-color: rgba(255, 170, 110, 0.5); */
   display: flex;
-  /* 显示一行 */
   flex-wrap: nowrap;
-  /* 贴边平分边距 */
   justify-content: space-around;
-  /* 水平从右向左 */
   flex-direction: row-reverse;
-  /* 子元素水平居中 */
   align-items: center;
 }
 
@@ -351,37 +317,27 @@ const showAddSong = () => {
   position: relative;
   flex: 1;
   height: 100%;
-  /* background-color: rgba(255, 230, 215, 0.5); */
 }
 
 .lyric-coontent {
   height: 55vh;
   width: 100%;
   border-radius: 20px;
-  /* background-color: rgba(255, 255, 255, 0.5); */
-  /* 绝对定位 */
   position: absolute;
-  /* 垂直居中 */
   top: 50%;
   transform: translateY(-50%);
   display: flex;
-  /* 水平布局 */
   flex-direction: row;
-  /* 显示一行 */
   flex-wrap: nowrap;
-  /* 贴边平分边距 */
   justify-content: space-around;
 }
 
 .content {
-  /* 固定定位 */
   position: fixed;
-  /* 使其覆盖整个屏幕 */
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  /* 背景透明 */
   background-color: rgba(0, 0, 0, 0);
 }
 </style>

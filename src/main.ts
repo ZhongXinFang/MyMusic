@@ -1,12 +1,14 @@
+import '@/style.css'
+import 'element-plus/dist/index.css'
+import 'view-ui-plus/dist/styles/viewuiplus.css'
+
+import App from '@/App.vue'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ViewUIPlus from 'view-ui-plus'
-import App from '@/App.vue'
 import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-import '@/style.css'
-import 'view-ui-plus/dist/styles/viewuiplus.css'
 import { Authorize } from '@/httpUnit/UserAPI.ts'
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 
 // 验证Token是否有效
 Authorize()
@@ -14,5 +16,7 @@ Authorize()
 const app = createApp(App)
 app.use(createPinia())
 app.use(ViewUIPlus)
-app.use(ElementPlus)
+app.use(ElementPlus,{
+    locale: zhCn,
+  })
 app.mount('#app')

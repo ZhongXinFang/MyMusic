@@ -12,7 +12,7 @@
                 <button title="放大窗口" class="from-head-io-button" v-show="formData.showMaximize">
                     <img src="@/assets/icon/最大化.svg" alt="">
                 </button>
-                <button @click="formData.isShow = false" title="关闭窗口" class="from-head-io-button"
+                <button @click="formStore.CloneForm(formData.id)" title="关闭窗口" class="from-head-io-button"
                     v-show="formData.showClose">
                     <img src="@/assets/icon/关闭.svg" alt="">
                 </button>
@@ -22,49 +22,67 @@
             <div class="search-box">
                 <div class="song-up">
                     <el-upload :action="baseUrl + '/SongFile/AddMusicFile'" :headers="headers"
-                        :on-success="UpSongFileSuccess" :before-upload="UpSongFileBefore" :limit="1">
+                        :on-success="(response: any) => UpFileSuccess(response, UpSuccessTypeEnum.SongFile)"
+                        :before-upload="(rawFile: any) => UpFielBefore(rawFile, UpSuccessTypeEnum.SongFile)" 
+                        :limit="1">
                         <el-button slot="trigger" size="small" type="primary">上传歌曲文件</el-button>
                     </el-upload>
                 </div>
                 <div class="song-up">
                     <el-upload :action="baseUrl + '/SongFile/AddMusicFile'" :headers="headers"
-                        :on-success="UpLyricFileSuccess" :before-upload="UpLyricFileBefore" :limit="1">
+                        :on-success="(response: any) => UpFileSuccess(response, UpSuccessTypeEnum.LyricFile)" 
+                        :before-upload="(rawFile: any) => UpFielBefore(rawFile, UpSuccessTypeEnum.LyricFile)" 
+                        :limit="1">
                         <el-button slot="trigger" size="small" type="primary">上传歌词文件(.lrc)</el-button>
                     </el-upload>
                 </div>
                 <div class="song-up">
                     <el-upload :action="baseUrl + '/SongFile/AddMusicFile'" :headers="headers"
-                        :on-success="UpImgFileSuccess" :before-upload="UpImgFileBefore" :limit="1">
+                        :on-success="(response: any) => UpFileSuccess(response, UpSuccessTypeEnum.ImgFile)" 
+                        :before-upload="(rawFile: any) => UpFielBefore(rawFile, UpSuccessTypeEnum.ImgFile)" 
+                        :limit="1">
                         <el-button slot="trigger" size="small" type="primary">上传封面文件</el-button>
                     </el-upload>
                 </div>
             </div>
             <div class="res-box">
-                <el-form label-position="top" label-width="100px" :inline ="true" :model="songInfo">
+                <el-form label-position="top" label-width="100px" :inline="true" :model="songInfo">
                     <el-form-item label="歌曲名称" class="a1">
-                        <el-input v-model="songInfo.title" />
+                        <el-input v-model="songInfo.Title" />
                     </el-form-item>
                     <el-form-item label="专辑">
                         <el-input v-model="songInfo.Album" />
                     </el-form-item>
                     <el-form-item label="发行日期">
-                        <el-input v-model="songInfo.Publicationdate" />
+                        <el-date-picker v-model="songInfo.Publicationdate" type="date" placeholder="选择日期" size="default"
+                            class="form-item-width" />
+                        <!-- <el-input v-model="songInfo.Publicationdate" /> -->
                     </el-form-item>
                     <el-form-item label="歌手">
-                        <el-input v-model="songInfo.ArtistId" />
+                        <el-select v-model="songInfo.ArtistId" placeholder="选择歌手" class="form-item-width">
+                            <el-option v-for="item in Artists" :key="item.Id" :label="item.Firstname + item.Lastname"
+                                :value="item.Id" />
+                        </el-select>
+                        <!-- <el-input v-model="songInfo.ArtistId" /> -->
                     </el-form-item>
                     <el-form-item label="作曲家">
-                        <el-input v-model="songInfo.ComposerArtistId" />
+                        <el-select v-model="songInfo.ComposerArtistId" placeholder="选择作曲家" class="form-item-width">
+                            <el-option v-for="item in Artists" :key="item.Id" :label="item.Firstname + item.Lastname"
+                                :value="item.Id" />
+                        </el-select>
                     </el-form-item>
                     <el-form-item label="作词家">
-                        <el-input v-model="songInfo.LyricistArtistId" />
+                        <el-select v-model="songInfo.LyricistArtistId" placeholder="选择作词家" class="form-item-width">
+                            <el-option v-for="item in Artists" :key="item.Id" :label="item.Firstname + item.Lastname"
+                                :value="item.Id" />
+                        </el-select>
                     </el-form-item>
                 </el-form>
             </div>
             <div class="bom-box">
-                <a class="addpr">添加艺术家</a>
-                <el-button type="primary" size="small">取消</el-button>
-                <el-button type="primary" size="small">提交</el-button>
+                <a class="addpr" title="此功能暂时没有启用">添加艺术家</a>
+                <el-button type="primary" size="small" @click="formStore.CloneForm(formData.id)">取消</el-button>
+                <el-button type="primary" size="small" @click="AddSongBtn">提交</el-button>
                 <span title="因为还有其他功能没有开放，好吧确实就是..." class="addpr-info">为什么这么丑？</span>
             </div>
         </div>
@@ -75,68 +93,87 @@
 import { ref, onMounted, watch } from 'vue'
 import interact from 'interactjs'
 import { ElMessage } from 'element-plus'
+import { plainToClass } from "class-transformer";
 import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 import { useFormStore } from '@/stores/FormStore.js'
 import { baseUrl } from '@/httpUnit/APIBase.ts'
+import { AllArtist,AddSong } from '@/httpUnit/SongAPI.ts'
+import { ArtistReqDto } from '@/httpUnit/Models/ArtistReqDto.ts'
+import { AddSongReqDto } from '@/httpUnit/Models/AddSongReqDto.ts'
+import { UploadFilesResDto } from '@/httpUnit/Models/UploadFilesResDto.ts'
+
+const props = defineProps({
+  id: {
+    type: String,
+    required: true
+  },
+})
 
 const formStore = useFormStore()
-const formData = ref<FormDataModel>(new FormDataModel(AppFormEnum.AddSongForm, false, 'id?AddSongForm'))
+const formData = ref<FormDataModel>(new FormDataModel(AppFormEnum.AddSongForm, false, props.id))
 
 const headers = {
     Authorization: ""
 }
 
-const songInfo = ref<any>({
-    Title: "",  // 歌曲名称
-    ArtistId: "", // 歌手ID
-    Album: "", // 专辑
-    Publicationdate: "", //  发行日期
-    ComposerArtistId: "", // 作曲家
-    LyricistArtistId: "", // 作词家
-})
-
-// 歌曲文件上传成功
-const UpSongFileSuccess = (response: any) => {
-    console.log(response);
+const AddSongBtn = async () => 
+{
+    const res = await AddSong(songInfo.value);
+    console.log(res);
 }
-// 歌曲文件上传前检查
-const UpSongFileBefore = (rawFile: any) => {
-    console.log(rawFile);
-    const fileType: string = rawFile.type
-    if (fileType.indexOf('audio') < 0) {
-        ElMessage.error("请选择音频文件，如 .mp3,.opus 等")
-        return false
+
+const Artists = ref<ArtistReqDto[]>(null!)
+
+const songInfo = ref<AddSongReqDto>(new AddSongReqDto())
+
+enum UpSuccessTypeEnum {
+    SongFile = 'SongFile',
+    LyricFile = 'LyricFile',
+    ImgFile = 'ImgFile',
+}
+
+const UpFileSuccess = (response: any, type: UpSuccessTypeEnum) => {
+    const res:UploadFilesResDto = plainToClass(UploadFilesResDto, response)
+    switch (type) {
+        case UpSuccessTypeEnum.ImgFile:
+                songInfo.value.Backgroundimgjson = JSON.stringify([res.FileName])
+                songInfo.value.Coverimgjson = JSON.stringify([res.FileName])
+            break;
+        case UpSuccessTypeEnum.LyricFile:
+        songInfo.value.Lyricfilesjson = JSON.stringify([res.FileName])
+            break;
+        case UpSuccessTypeEnum.SongFile:
+        songInfo.value.Audiofilesjson = JSON.stringify([res.FileName])
+            break;
     }
 }
 
-// 歌词文件上传成功
-const UpLyricFileSuccess = (response: any) => {
-    console.log(response);
-}
-// 歌词文件上传前检查
-const UpLyricFileBefore = (rawFile: any) => {
-    console.log(rawFile);
+const UpFielBefore = (rawFile: any, type: UpSuccessTypeEnum) => {
+    const fileType: string = rawFile.type
     const fileName: string = rawFile.name
-    if (fileName.indexOf('lrc') < 0) {
-        ElMessage.error("请选择 lrc 歌词文件,暂时只支持 lrc 格式的歌词")
-        return false
+    switch (type) {
+        case UpSuccessTypeEnum.ImgFile:
+            if (fileType.indexOf('image') < 0) {
+                ElMessage.error("请选择图片文件，如 .jpg,.png 等")
+                return false
+            }
+            break;
+        case UpSuccessTypeEnum.LyricFile:
+            if (fileName.indexOf('lrc') < 0) {
+                ElMessage.error("请选择 lrc 歌词文件,暂时只支持 lrc 格式的歌词")
+                return false
+            }
+            break;
+        case UpSuccessTypeEnum.SongFile:
+            if (fileType.indexOf('audio') < 0) {
+                ElMessage.error("请选择音频文件，如 .mp3,.opus 等")
+                return false
+            }
+            break;
     }
 }
 
-// 封面文件上传成功
-const UpImgFileSuccess = (response: any) => {
-    console.log(response);
-}
-// 封面文件上传前检查
-const UpImgFileBefore = (rawFile: any) => {
-    console.log(rawFile);
-    const fileType: string = rawFile.type
-    if (fileType.indexOf('image') < 0) {
-        ElMessage.error("请选择图片文件，如 .jpg,.png 等")
-        return false
-    }
-}
 
 // 窗口显示相关
 watch(() => formData.value.isShow, (newvalue) => {
@@ -171,7 +208,8 @@ const dragMoveListener = (event: any) => {
     target.setAttribute('data-x', x)
     target.setAttribute('data-y', y)
 }
-onMounted(() => {
+
+onMounted(async () => {
     formData.value.showMinimize = true
     formData.value.showMaximize = false
     formData.value.showClose = true
@@ -231,57 +269,68 @@ onMounted(() => {
     // 读取 token
     const token = localStorage.getItem('token');
     headers.Authorization = 'bearer ' + token;
+
+    const ArtistsRes: ArtistReqDto[] = await AllArtist() ?? [] as ArtistReqDto[]
+    if (ArtistsRes.length === 0)
+        console.log("获取歌手失败");
+    Artists.value = ArtistsRes
 })
 
 </script>
 
 <style scoped>
+.res-box>>>.form-item-width {
+    width: 196px !important;
+}
 
-.addpr-info{
+.form-item-width {
+    width: 196px !important;
+}
+
+.addpr-info {
     color: rgb(168, 170, 172);
     cursor: pointer;
 }
 
-.addpr-info:hover{
+.addpr-info:hover {
     /* 添加下划线 */
     text-decoration: underline;
 }
 
-.addpr{
+.addpr {
     position: absolute;
     bottom: 5px;
     left: 5px;
 }
 
-.bom-box>*{
+.bom-box>* {
     margin-inline: 5px;
 }
 
-.bom-box{
+.bom-box {
     position: relative;
     min-height: 80px;
     display: flex;
     /* 从右向左 */
     flex-direction: row-reverse;
-    flex-wrap:nowrap;
+    flex-wrap: nowrap;
     /* 垂直向下 */
     align-items: flex-end;
     padding: 10px;
 }
 
-.res-box >>> .el-form-item__label{
+.res-box>>>.el-form-item__label {
     color: #fff !important;
 }
 
-.res-box >>> input,
-.res-box >>> .el-form-item__content,
-.res-box >>> .el-input__wrapper
-{
+.res-box>>>input,
+.res-box>>>.el-form-item__content,
+.res-box>>>.el-input__wrapper {
     background-color: #353539;
     color: #eee;
 }
 
-.res-box{
+.res-box {
     margin-inline: 10px;
 }
 
