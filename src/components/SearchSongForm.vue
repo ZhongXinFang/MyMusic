@@ -19,29 +19,35 @@
         </div>
         <div class="from-body">
             <div class="search-box">
-                <Input search enter-button placeholder="输入歌曲名称" />
+                <Input search enter-button placeholder="输入歌曲名称" @on-search="Search" />
             </div>
             <div class="res-box">
                 <ul>
-                <li v-for="_ in 20" title="🎶">
-                    <span class="li-img">
-                        <img src="@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
-                    </span>
-                    <span>
-                    </span>
-                    <span class="li-title">听妈妈的话<span class="li-po">周杰伦</span></span>
-                    <div class="io">
-                        <span class="add-list">
-                            <img title="添加到播放列表" class="io-play" src="@/assets/icon/增加添加加号.svg" alt="">
+                    <li v-for="item in searchResult.Data" :title="item.Title">
+                        <span class="li-img">
+                            <img :src="base + '/SongFile/' +ParseJsonArray(item.Backgroundimgjson)[0]" alt="">
                         </span>
                         <span>
-                            <img title="立即播放" class="io-play" src="@/assets/icon/播放.svg" alt="">
                         </span>
-                    </div>
-                    <!-- <span class="li-time">04:05</span> -->
-                </li>
-            </ul>
-            <div class="page"><Page :total="100" simple size="small" /></div>
+                        <span class="li-title">{{ item.Title }}<span class="li-po">{{ item.ArtistName}}</span></span>
+                        <div class="io">
+                            <span class="add-list">
+                                <img title="添加到播放列表" 
+                                @click="AddSongToList(item)"
+                                class="io-play" src="@/assets/icon/增加添加加号.svg" alt="">
+                            </span>
+                            <span>
+                                <img title="立即播放" 
+                                @click="PlaySong(item)"
+                                class="io-play" src="@/assets/icon/播放.svg" alt="">
+                            </span>
+                        </div>
+                        <!-- <span class="li-time">04:05</span> -->
+                    </li>
+                </ul>
+                <div class="page" v-show="searchResult.Count > 0">
+                    <Page v-show="searchResult.TotalPage > 1" :model-value="currentPage" :total="searchResult.Count" :page-size="pageSize" simple size="small" />
+                </div>
             </div>
         </div>
     </div>
@@ -53,29 +59,77 @@ import interact from 'interactjs'
 import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 import { useFormStore } from '@/stores/FormStore.js'
+import { SearchSong } from '@/httpUnit/SongAPI.ts'
+import { base } from '@/httpUnit/APIBase.ts'
+import { SongReqDto } from '@/httpUnit/Models/SongReqDto.ts'
+import { SearchReqDto } from '@/httpUnit/Models/SearchReqDto.ts'
+import { useSongStore } from '@/stores/SongStore.js'
+import { SearchSongListReqDto } from '@/httpUnit/Models/SearchSongListReqDto.ts'
 
 const formStore = useFormStore()
+const songStore = useSongStore()
 const formData = ref<FormDataModel>(new FormDataModel(AppFormEnum.SearchSongForm, false, 'id?'))
+
+// 搜索相关
+// 搜索字符串
+const searchString = ref('')
+// 当前分页
+const currentPage = ref(1)
+const pageSize = ref(20)
+// 搜索结果对象
+const searchResult = ref<SearchSongListReqDto<SongReqDto>>(new SearchSongListReqDto<SongReqDto>())
+    
+const Search = async () => {
+    const req = new SearchReqDto()
+    if (!searchString.value || searchString.value === '')
+        req.Q = ' '
+    else
+        req.Q = searchString.value
+    req.Page = currentPage.value
+    req.PageSize = pageSize.value
+
+    const res = await SearchSong(req)
+    searchResult.value = res ?? new SearchSongListReqDto<SongReqDto>()
+}
+
+// 添加歌曲到播放列表
+const AddSongToList = (song: SongReqDto) => {
+    songStore.AddSong(song)
+}
+// 播放歌曲
+const PlaySong = (song: SongReqDto) => {
+    if (songStore.hasSong(song.Id))
+        songStore.play(song.Id)
+    else
+    {
+        songStore.AddSong(song)
+        songStore.play(song.Id)
+    }
+}
+
+// 解析json数组
+const ParseJsonArray = (json: string) => {
+    if (!json || json === '')
+        return []
+    return JSON.parse(json)
+}
 
 // 窗口显示相关
 watch(() => formData.value.isShow, (newvalue) => {
     const html = form.value
     if (!html)
         return
-    if (newvalue === true)
-    {
+    if (newvalue === true) {
         html.classList.remove('closed')
         html.classList.remove('open-closed')
         html.classList.add('show')
     }
-    else
-    {
+    else {
         html.classList.remove('show')
         html.classList.add('closed')
     }
 })
-watch(() => formData.value.zIndex, (newValue) =>
-{
+watch(() => formData.value.zIndex, (newValue) => {
     const html = form.value
     if (!html)
         return
@@ -99,6 +153,8 @@ onMounted(() => {
     formData.value.showClose = false
 
     formStore.AddForm(formData.value)
+
+    Search()
 
     interact(form.value!)
         .resizable({
@@ -153,16 +209,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.add-list{
+.add-list {
     height: 25px;
     width: 25px;
 }
 
-.io > span{
+.io>span {
     margin-inline-start: 5px;
 }
 
-.io{
+.io {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -173,16 +229,16 @@ onMounted(() => {
     margin-inline-start: 5px;
 }
 
-.io-play{
+.io-play {
     width: 20px;
 }
 
-span>img{
+span>img {
     width: 100%;
     height: 100%;
 }
 
-.page{
+.page {
     margin-top: 10px;
     margin-bottom: 10px;
     display: flex;
@@ -270,17 +326,18 @@ span>img{
     border-radius: 10px;
 }
 
-.res-box{
+.res-box {
     margin-top: 10px;
     height: 100%;
     overflow-y: auto;
 }
 
-.search-box{
+.search-box {
     width: 90%;
     margin-inline: auto;
     margin-top: 10px;
 }
+
 .from-body li>span {
     display: flex;
     align-items: center;

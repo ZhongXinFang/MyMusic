@@ -19,14 +19,16 @@
         </div>
         <div class="from-body">
             <div class="info">
-                <span class="info-i">共200首歌曲，已缓存120首</span>
-                <span class="info-o" title="清空播放列表"><img src="@/assets/icon/删除.svg" alt=""></span>
+                <span class="info-i">共{{songStore.userPlayList.length}}首歌曲，缓存功能未启用</span>
+                <span v-show="false" class="info-o" title="清空播放列表"><img src="@/assets/icon/删除.svg" alt=""></span>
             </div>
             <ul>
-                <li v-for="index in 20" title="🎶" :class="{ 'now-playing': playingIndex === index - 1 }">
+                <li v-for="(item,index) in songStore.userPlayList" title="点击播放" 
+                :class="{ 'now-playing': songStore.currentUserSongIndex === index }"
+                @click="songStore.play(item.Id)">
                     <span class="li-img">
-                        <img src="@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
-                        <div v-if="playingIndex === index - 1" class="li-img-playing">
+                        <img :src="base + '/SongFile/' + ParseJsonArray(item.Backgroundimgjson)?.[0]" alt="">
+                        <div v-show="songStore.currentUserSongIndex === index " class="li-img-playing">
                             <svg width="30" height="10" viewBox="0 0 50 10" style="margin-left: 8px;">
                                 <g transform="translate(50%, 50%)">
                                     <rect class="svg-item" id="r1" x="5" y="0" width="4" height="10" />
@@ -39,9 +41,9 @@
                     </span>
                     <span>
                     </span>
-                    <span class="li-title">听妈妈的话</span>
-                    <span class="li-po">周杰伦</span>
-                    <span class="li-time">04:05</span>
+                    <span class="li-title">{{ item.Title ?? '-' }}</span>
+                    <span class="li-po">{{ item.ArtistName ?? '-' }}</span>
+                    <span class="li-time"> {{ item.Album ?? '-' }} </span>
                 </li>
             </ul>
         </div>
@@ -55,7 +57,10 @@ import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 import { useTeBarStore } from '@/stores/TeBarStore.js'
 import { useFormStore } from '@/stores/FormStore.js'
+import { useSongStore } from '@/stores/SongStore.js'
+import { base } from '@/httpUnit/APIBase.ts'
 
+const songStore = useSongStore()
 const teBarStore = useTeBarStore()
 const formStore = useFormStore()
 let formData = ref(new FormDataModel(AppFormEnum.PlayingListForm, false, 'id?temp=1'))
@@ -86,10 +91,6 @@ watch(() => formData.value.zIndex, (newValue) =>
         return
     html.style.zIndex = newValue.toString()
 })
-
-// 播放列表相关
-// 正在播放的行索引(从 0 开始)
-const playingIndex = ref(2)
 
 // 窗口拖动相关
 const draggableRef = ref<HTMLElement>(null!)
@@ -175,6 +176,11 @@ onUnmounted(() => {
     teBarStore.isShow = false
 })
 
+const ParseJsonArray = (json: string | null | undefined) : any[] | null => {
+  if (!json || json === '')
+    return null
+  return JSON.parse(json)
+}
 </script>
 
 <style scoped>

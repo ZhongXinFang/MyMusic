@@ -1,3 +1,3 @@
-export interface LoginResDto {
+export class LoginResDto {
 	
 }

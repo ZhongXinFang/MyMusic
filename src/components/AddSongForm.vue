@@ -23,24 +23,21 @@
                 <div class="song-up">
                     <el-upload :action="baseUrl + '/SongFile/AddMusicFile'" :headers="headers"
                         :on-success="(response: any) => UpFileSuccess(response, UpSuccessTypeEnum.SongFile)"
-                        :before-upload="(rawFile: any) => UpFielBefore(rawFile, UpSuccessTypeEnum.SongFile)" 
-                        :limit="1">
+                        :before-upload="(rawFile: any) => UpFielBefore(rawFile, UpSuccessTypeEnum.SongFile)" :limit="1">
                         <el-button slot="trigger" size="small" type="primary">上传歌曲文件</el-button>
                     </el-upload>
                 </div>
                 <div class="song-up">
                     <el-upload :action="baseUrl + '/SongFile/AddMusicFile'" :headers="headers"
-                        :on-success="(response: any) => UpFileSuccess(response, UpSuccessTypeEnum.LyricFile)" 
-                        :before-upload="(rawFile: any) => UpFielBefore(rawFile, UpSuccessTypeEnum.LyricFile)" 
-                        :limit="1">
+                        :on-success="(response: any) => UpFileSuccess(response, UpSuccessTypeEnum.LyricFile)"
+                        :before-upload="(rawFile: any) => UpFielBefore(rawFile, UpSuccessTypeEnum.LyricFile)" :limit="1">
                         <el-button slot="trigger" size="small" type="primary">上传歌词文件(.lrc)</el-button>
                     </el-upload>
                 </div>
                 <div class="song-up">
                     <el-upload :action="baseUrl + '/SongFile/AddMusicFile'" :headers="headers"
-                        :on-success="(response: any) => UpFileSuccess(response, UpSuccessTypeEnum.ImgFile)" 
-                        :before-upload="(rawFile: any) => UpFielBefore(rawFile, UpSuccessTypeEnum.ImgFile)" 
-                        :limit="1">
+                        :on-success="(response: any) => UpFileSuccess(response, UpSuccessTypeEnum.ImgFile)"
+                        :before-upload="(rawFile: any) => UpFielBefore(rawFile, UpSuccessTypeEnum.ImgFile)" :limit="1">
                         <el-button slot="trigger" size="small" type="primary">上传封面文件</el-button>
                     </el-upload>
                 </div>
@@ -98,29 +95,39 @@ import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 import { useFormStore } from '@/stores/FormStore.js'
 import { baseUrl } from '@/httpUnit/APIBase.ts'
-import { AllArtist,AddSong } from '@/httpUnit/SongAPI.ts'
+import { useSongStore } from '@/stores/SongStore.js'
+import { AllArtist, AddSong } from '@/httpUnit/SongAPI.ts'
 import { ArtistReqDto } from '@/httpUnit/Models/ArtistReqDto.ts'
 import { AddSongReqDto } from '@/httpUnit/Models/AddSongReqDto.ts'
+import { SongReqDto } from '@/httpUnit/Models/SongReqDto.ts'
 import { UploadFilesResDto } from '@/httpUnit/Models/UploadFilesResDto.ts'
 
 const props = defineProps({
-  id: {
-    type: String,
-    required: true
-  },
+    id: {
+        type: String,
+        required: true
+    },
 })
 
 const formStore = useFormStore()
+const songStore = useSongStore()
 const formData = ref<FormDataModel>(new FormDataModel(AppFormEnum.AddSongForm, false, props.id))
 
 const headers = {
     Authorization: ""
 }
 
-const AddSongBtn = async () => 
-{
+const AddSongBtn = async () => {
     const res = await AddSong(songInfo.value);
-    console.log(res);
+    if (res != null) {
+        songStore.AddSong(res as SongReqDto)
+        ElMessage.success("添加成功")
+        formStore.CloneForm(formData.value.id)
+    }
+    else
+    {
+        ElMessage.error("添加失败")
+    }
 }
 
 const Artists = ref<ArtistReqDto[]>(null!)
@@ -134,17 +141,17 @@ enum UpSuccessTypeEnum {
 }
 
 const UpFileSuccess = (response: any, type: UpSuccessTypeEnum) => {
-    const res:UploadFilesResDto = plainToClass(UploadFilesResDto, response)
+    const res: UploadFilesResDto = plainToClass(UploadFilesResDto, response)
     switch (type) {
         case UpSuccessTypeEnum.ImgFile:
-                songInfo.value.Backgroundimgjson = JSON.stringify([res.FileName])
-                songInfo.value.Coverimgjson = JSON.stringify([res.FileName])
+            songInfo.value.Backgroundimgjson = JSON.stringify([res.FileName])
+            songInfo.value.Coverimgjson = JSON.stringify([res.FileName])
             break;
         case UpSuccessTypeEnum.LyricFile:
-        songInfo.value.Lyricfilesjson = JSON.stringify([res.FileName])
+            songInfo.value.Lyricfilesjson = JSON.stringify([res.FileName])
             break;
         case UpSuccessTypeEnum.SongFile:
-        songInfo.value.Audiofilesjson = JSON.stringify([res.FileName])
+            songInfo.value.Audiofilesjson = JSON.stringify([res.FileName])
             break;
     }
 }
@@ -215,7 +222,7 @@ onMounted(async () => {
     formData.value.showClose = true
 
     formStore.AddForm(formData.value)
-    formData.value.isShow = true
+    formData.value.isShow = false
     interact(form.value!)
         .resizable({
             // 可以从所有边缘和角落进行调整大小

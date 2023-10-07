@@ -1,5 +1,5 @@
 <template>
-    <div ref="html" class="login">
+    <div ref="html" class="login" id="message-container">
         <div class="conten">
             <p class="title">你需要登录账号之后才能使用</p>
             <div class="login-dialog">
@@ -57,7 +57,7 @@
                                     <el-button :loading="loading" class="login-button" @click="LoginByPassword">
                                         登录</el-button>
                                 </div>
-                                <p class="info" @click="LoginType = 0"><a>忘记密码？暂时不会忘记密码</a></p>
+                                <p class="info" @click="LoginType = 1" title="我们不保存你的密码,如果遗忘则无法找回"><a>忘记密码？通过邮箱验证登录</a></p>
                             </template>
                             <template v-if="LoginType === 1">
                                 <el-form label-position="top" label-width="100px" :model="LoginByVerificationCodeObj">
@@ -68,6 +68,7 @@
                                         <el-input v-model="LoginByVerificationCodeObj.VerificationCode">
                                             <template #append>
                                                 <el-button :disabled="LoginByVerificationCodeObj.VerificationCodeTimeMod"
+                                                    :loading="LoginByVerificationCodeObj.vCodebuttonLoading"
                                                     @click="StartVerificationCodeTime(LoginByVerificationCodeObj)">{{
                                                         LoginByVerificationCodeObj.buttonTitle }}</el-button>
                                             </template>
@@ -90,6 +91,7 @@
                                     <el-input v-model="RegisterObj.VerificationCode">
                                         <template #append>
                                             <el-button :disabled="RegisterObj.VerificationCodeTimeMod"
+                                                :loading="RegisterObj.vCodebuttonLoading"
                                                 @click="StartVerificationCodeTime(RegisterObj)">{{ RegisterObj.buttonTitle
                                                 }}</el-button>
                                         </template>
@@ -125,6 +127,8 @@ class LoginByVerificationCodeClass {
     VerificationCodeTimeMod: boolean = false
     VerificationCodeTime: number = 59
     buttonTitle: string = '获取验证码'
+    // 验证码按钮是否参与加载状态
+    vCodebuttonLoading: boolean = false
 }
 
 class RegisterClass {
@@ -135,14 +139,19 @@ class RegisterClass {
     VerificationCodeTimeMod: boolean = false
     VerificationCodeTime: number = 59
     buttonTitle: string = '获取验证码'
+    // 按钮是否参与加载状态
+    vCodebuttonLoading: boolean = false
 }
 
 import { JSEncrypt } from 'jsencrypt'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { AccountVerification, Login } from '@/httpUnit/UserAPI.ts'
+import { AccountVerification, Login, LoginByCode, GetVerifyCode } from '@/httpUnit/UserAPI.ts'
 import { AccountVerificationResDto } from '@/httpUnit/Models/AccountVerificationResDto.ts'
 import { AccountVerificationReqDto } from '@/httpUnit/Models/AccountVerificationReqDto.ts'
+import { GetVerificationCodeReqDto } from '@/httpUnit/Models/GetVerificationCodeReqDto.ts'
+import { VerificationCodeTypeEnum } from "@/httpUnit/Models/VerificationCodeTypeEnum.ts"
+import { LoginFromEmailReqDto } from '@/httpUnit/Models/LoginFromEmailReqDto.ts'
 import { LoginReqDto } from '@/httpUnit/Models/LoginReqDto.ts'
 import { LoginResDto } from '@/httpUnit/Models/LoginResDto.ts'
 
@@ -162,8 +171,28 @@ const crypt = new JSEncrypt()
 // 倒计时定时器
 let timer: any = null
 
-// 开始倒计时
-const StartVerificationCodeTime = (obj: LoginByVerificationCodeClass | RegisterClass) => {
+// 获取验证码，开启倒计时
+const StartVerificationCodeTime = async (obj: LoginByVerificationCodeClass | RegisterClass) => {
+    const req = new GetVerificationCodeReqDto()
+    obj.vCodebuttonLoading = true
+    if (obj instanceof LoginByVerificationCodeClass) {
+        // 使用验证码登录
+        req.Email = LoginByVerificationCodeObj.value.Email
+        req.CodeEnum = VerificationCodeTypeEnum.Login
+    }
+    else {
+        // 使用注册
+        req.Email = RegisterObj.value.Email
+        req.CodeEnum = VerificationCodeTypeEnum.Register
+    }
+    const res = await GetVerifyCode(req)
+    obj.vCodebuttonLoading = false
+    
+    if (res === null) {
+        ElMessage.error('验证码发送失败!')
+        console.log(111);
+        return
+    }
     obj.VerificationCodeTimeMod = true
     obj.VerificationCodeTime = 59
 }
@@ -172,7 +201,7 @@ const LoginEmailInputBlurEvent = async () => {
     const req = new AccountVerificationReqDto()
     req.Email = LoginByPasswordObj.value.Email
     const res: AccountVerificationResDto | null = await AccountVerification(req)
-    
+
     if (res === null) {
         ElMessage.error('账号并不存在!')
         return
@@ -194,13 +223,35 @@ const LoginByPassword = async () => {
         ElMessage.error('账号或密码错误!')
         return
     }
+    else
+    {
+        // 刷新页面
+        window.location.reload()
+    }
 }
 
-const LoginByVerificationCode = () => {
+const LoginByVerificationCode = async () => {
+    const req = new LoginFromEmailReqDto()
+    req.Email = LoginByVerificationCodeObj.value.Email
+    req.VerificationCode = LoginByVerificationCodeObj.value.VerificationCode
+    const res = await LoginByCode(req)
+    if (res instanceof LoginResDto){
+        window.location.reload()
+    }
+    else
+    {
+        ElMessage.error(res ?? '登录失败!')
+        return
+    }
 
 }
 const Register = () => {
-
+    // const req = new RegistserReqDto()
+    // req.Email = RegisterObj.value.Email
+    // req.Password = RegisterObj.value.Password
+    // req.VerificationCode = RegisterObj.value.VerificationCode
+    // RegisterObj.value.vCodebuttonLoading = true
+    // RegisterObj.value.buttonTitle = '注册中...'
 }
 
 onMounted(() => {
@@ -209,11 +260,20 @@ onMounted(() => {
             --LoginByVerificationCodeObj.value.VerificationCodeTime
             LoginByVerificationCodeObj.value.buttonTitle = `${LoginByVerificationCodeObj.value.VerificationCodeTime}`
         }
+        else if (LoginByVerificationCodeObj.value.VerificationCodeTime <= 0)
+        {
+            LoginByVerificationCodeObj.value.VerificationCodeTimeMod = false
+            LoginByVerificationCodeObj.value.buttonTitle = '获取验证码'
+        }
         if (RegisterObj.value.VerificationCodeTimeMod && RegisterObj.value.VerificationCodeTime > 0) {
             --RegisterObj.value.VerificationCodeTime
             RegisterObj.value.buttonTitle = `${RegisterObj.value.VerificationCodeTime}`
         }
-
+        else if(RegisterObj.value.VerificationCodeTime <= 0)
+        {
+            RegisterObj.value.VerificationCodeTimeMod = false
+            RegisterObj.value.buttonTitle = '获取验证码'
+        }
     }, 1000)
     LoginEmailInputBlurEvent()
 })
@@ -325,6 +385,6 @@ onUnmounted(() => {
     justify-content: center;
     align-items: center;
     background-color: #fff;
-    z-index: 999999;
+    z-index: 999;
 }
 </style>

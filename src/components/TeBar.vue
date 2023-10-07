@@ -15,22 +15,24 @@
       </div>
       <div class="io">
         <div class="io-play-img-box">
-          <img class="io-play-img" src="@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg" alt="">
+          <img class="io-play-img" :src="base + '/SongFile/' + ParseJsonArray(songStore.currentSong?.Backgroundimgjson)?.[0]" alt="">
         </div>
         <div class="io-play-info-box">
-          <span class="io-play-info-lyric">听妈妈的话</span>
-          <span class="io-play-info-title">周杰伦</span>
+          <!-- 歌曲 -->
+          <span class="io-play-info-lyric">{{songStore.currentSong?.Title ?? 'Music'}}</span>
+          <!-- 歌手 -->
+          <span class="io-play-info-title">{{songStore.currentSong?.ArtistName ?? '-'}}</span>
         </div>
         <div class="io-play-box">
           <span>
-            <img src="@/assets/icon/back.svg" alt="">
+            <img title="上一首" @click="songStore.prev" src="@/assets/icon/back.svg" alt="">
           </span>
           <span id="io-play">
             <img v-show="ioCurrPlay" src="@/assets/icon/play.svg" alt="" @click="togglePlay(false)">
             <img v-show="!ioCurrPlay" src="@/assets/icon/pause.svg" alt="" @click="togglePlay(true)">
           </span>
           <span>
-            <img src="@/assets/icon/next.svg" alt="">
+            <img title="下一首" @click="songStore.next" src="@/assets/icon/next.svg" alt="">
           </span>
         </div>
         <div class="io-play-right-oper">
@@ -64,7 +66,7 @@
       :class="{ 'hidden-visibility': isShowVolumePoptip === false}" 
       :style="volumeSelectStyle"
       @mouseleave="IoVolumeMouseleavetEvent">
-       <el-slider v-model="Volume" :show-tooltip="false" vertical height="100px"  :min="0.1" :max="1" :step="0.025"/>
+       <el-slider v-model="songStore.volume" :show-tooltip="false" vertical height="100px"  :min="0.1" :max="1" :step="0.025"/>
       </div>
     </div>
   </div>
@@ -76,6 +78,7 @@ import { useFormStore } from '@/stores/FormStore.js'
 import { useSongStore } from '@/stores/SongStore.js'
 import { useTeBarStore } from '@/stores/TeBarStore.js'
 import { PlayModeEnum } from '@/models/PlayModeEnum.ts'
+import { base } from '@/httpUnit/APIBase.ts'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 
 const html = ref<HTMLElement>(null!)
@@ -98,9 +101,6 @@ const volumeSelectStyle = ref({
   left: '600px',
   top: '0px'
 })
-
-// 音量
-const Volume = ref(0.3)
 
 watch(() => isShowVolumePoptip.value, (newValue) => {
   if (newValue === true) {
@@ -144,7 +144,7 @@ let ioShow = ref(true)
 // 是否强显示 (外部条件需要状态栏一直保持显示状态，此时暂停常规的隐藏定时器)
 let ioShowForce = ref(false)
 // 是否展开进度条
-let oterBarShow = ref(true)
+let oterBarShow = ref(false)
 // 鼠标离开 io-curr 区域时。用于隐藏 io 控制台的定时器
 let ioCurrMouseoutTimer: any | null = null
 // 当前是否处于播放状态
@@ -254,6 +254,11 @@ onMounted(() => {
   }  
 })
 
+const ParseJsonArray = (json: string | null | undefined) : any[] | null => {
+  if (!json || json === '')
+    return null
+  return JSON.parse(json)
+}
 </script>
 
 <style scoped>
@@ -483,7 +488,7 @@ onMounted(() => {
   flex-wrap: nowrap;
   align-items: center;
   background-color: #4b494b;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 14px;
   transition: 0.5s;
 }
