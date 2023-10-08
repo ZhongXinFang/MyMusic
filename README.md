@@ -4,7 +4,7 @@
 
 另一个项目与此项目配套 WebAPI [ZhongXinFang/MyMusicWebAPI (github.com)](https://github.com/ZhongXinFang/MyMusicWebAPI).
 
-🎉🎉 第一个线上版本已经部署完毕，通过此链接进行线上体验 [MyMusic](https://43.139.98.76/).
+🎉🎉 第一个线上版本已经部署完毕，通过此链接进行线上体验 [MyMusic](https://43.139.98.76/).（服务器即将到期后续地址可能改变）
 
 之后的每次版本迭代都会在线上部署，敬请体验吧！
 
