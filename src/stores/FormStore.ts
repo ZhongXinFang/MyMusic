@@ -1,9 +1,9 @@
-import { ref, shallowReactive } from 'vue'
+import { ref,defineAsyncComponent, markRaw } from 'vue'
 import { defineStore } from 'pinia'
 import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
 import { ComponentClass } from '@/models/ComponentClass.ts'
-import { UnitEnum } from '@/models/UnitEnum.ts'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
+import { generateGuid } from '@/tools/tool.ts'
 
 export const useFormStore = defineStore
     ("FormStore", () => {
@@ -11,9 +11,9 @@ export const useFormStore = defineStore
         let zIndexMax = ref<number>(1)
 
         // 当前显示的窗口集合
-        const FormList = ref<Array<FormDataModel>>([])
+        const FormList = ref<FormDataModel[]>([])
         // 当前显示的窗口关联的组件示例集合
-        const componentList = shallowReactive<ComponentClass[]>([])
+        const componentList = ref<ComponentClass[]>([])
 
         /// 窗口控制
         // 添加窗口
@@ -32,8 +32,10 @@ export const useFormStore = defineStore
         }
         // 显示窗口
         const Show = (id: string) => {
+            
             const item = FormList.value.find((item) => item.id === id)
             if (item) {
+                console.log('show111',id);
                 item.isShow = true
                 item.zIndex = ++zIndexMax.value
             }
@@ -57,22 +59,27 @@ export const useFormStore = defineStore
         /// 组件控制
         // 关闭窗口(卸载组件)
         const CloneForm = (id: string) => {
-            const index = componentList.findIndex(x => x.id === id)
+            const index = componentList.value.findIndex(x => x.id === id)
             if (index < 0)
                 return
             RemoveForm(id)
-            componentList.splice(index, 1)
+            componentList.value.splice(index, 1)
         }
+        // 加载所有的组件
+        const modules = import.meta.glob('/src/components/*.vue'); 
         // 添加组件
         const AddCom = (obj: ComponentClass): void => {
             if (!obj)
                 return
-            componentList.push(obj)
+            componentList.value.push(obj)
         }
         // 创建组件
         const CreateCom = (type: AppFormEnum): void => {
-            const com = UnitEnum[(type.toString() + 'Unit') as keyof typeof UnitEnum]
-            componentList.push(new ComponentClass('111',com))
+            const component = new ComponentClass(generateGuid(), type.toString());
+            const path = `/src/components/${type.toString()}.vue`;
+            component.comobj = defineAsyncComponent(modules[path] as any);
+            componentList.value.push(markRaw(component))
+            console.log('CreateCom',componentList.value)
         }
 
         // 寻找是否有指定类型的窗口

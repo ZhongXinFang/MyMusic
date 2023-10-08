@@ -25,7 +25,7 @@ export const Login = async (reqObj: LoginReqDto): Promise<LoginResDto | null> =>
 export const LoginByCode = async (reqObj: LoginFromEmailReqDto): Promise<LoginResDto | string> => {
     const res = await apiBase.post(`/Login/LoginFromEmail`, reqObj)
     if (res?.status === 204)
-        return {} as LoginResDto
+        return new LoginResDto()
     return res.data as string
 }
 

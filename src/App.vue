@@ -7,12 +7,12 @@ import { base } from '@/httpUnit/APIBase.ts'
 import Login from '@/components/Login.vue'
 import { useFormStore } from '@/stores/FormStore.js'
 import { useSongStore } from '@/stores/SongStore.js'
-import SearchSongForm from '@/components/SearchSongForm.vue'
-import { generateGuid } from '@/tools/tool.ts'
-import PlayingListForm from '@/components/PlayingListForm.vue'
+// import SearchSongForm from '@/components/SearchSongForm.vue'
+// import { generateGuid } from '@/tools/tool.ts'
+// import PlayingListForm from '@/components/PlayingListForm.vue'
 import { AppFormEnum } from '@/components/FormBase/AppFormEnum.ts'
 import { FormDataModel } from '@/components/FormBase/FormDataModel.ts'
-import { ComponentClass } from '@/models/ComponentClass.ts'
+// import { ComponentClass } from '@/models/ComponentClass.ts'
 import { SearchReqDto } from '@/httpUnit/Models/SearchReqDto.ts'
 import { SearchSong, GetLyricFileRUrl } from '@/httpUnit/SongAPI.ts'
 import { SearchSongListReqDto } from '@/httpUnit/Models/SearchSongListReqDto.ts'
@@ -131,7 +131,7 @@ const InitLyric = async (fileName: string) => {
 const ShowLyric = (time: number) => {
     // 查找寻找最后一个小于或者等于当前时间的歌词
     const row = lyricList.value.slice().reverse().find((item) => item.time <= time) ?? null
-    if(currentLyric.value === row) return
+    if (currentLyric.value === row) return
     // 在页面上寻找指定属性值的元素
     const dom = document.querySelector(`[data-time="${row?.time}"]`)
     currentLyricDom.value?.classList.remove('active')
@@ -142,8 +142,16 @@ const ShowLyric = (time: number) => {
 }
 
 onMounted(async () => {
-    formStore.AddCom(new ComponentClass(generateGuid(), PlayingListForm))
-    formStore.AddCom(new ComponentClass(generateGuid(), SearchSongForm))
+
+    console.log('App onMOunted');
+
+    // const path = `/src/components/PlayingListForm.vue`;
+    // loadcomobj.value = defineAsyncComponent(modules[path] as any);
+
+    // formStore.AddCom(new ComponentClass(generateGuid(), AppFormEnum.AddSongForm))
+    // formStore.AddCom(new ComponentClass(generateGuid(), AppFormEnum.PlayingListForm))
+    // formStore.AddCom(new ComponentClass(generateGuid(), AppFormEnum.SearchSongForm))
+
     document.addEventListener('click', hideMenu);
 
     // 获取部分歌曲，并且加入播放列表
@@ -175,21 +183,23 @@ onUnmounted(() => {
 // 背景图url
 const backgroundUrl = computed(() => {
     if (!songStore.currentSong)
-        return '@/assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg'
+        return 'assets/images/2FAB5B7739724830B45C4D192D59D0FF.jpg'
     return base + '/SongFile/' + ParseJsonArray(songStore.currentSong?.Backgroundimgjson)?.[0]
 })
 
 // 右键菜单相关
+const menuHtml = ref<HTMLElement>(null!)
 const menuTop = ref(0)
 const menuLeft = ref(0)
-const menuisShow = ref(false)
 const showMenu = (e: any) => {
     menuTop.value = e.clientY;
     menuLeft.value = e.clientX;
-    menuisShow.value = true;
+    menuHtml.value.style.top = e.clientY + 'px'
+    menuHtml.value.style.left = e.clientX + 'px'
+    menuHtml.value.classList.remove('hidden')
 }
 const hideMenu = () => {
-    menuisShow.value = false;
+    menuHtml.value?.classList.add('hidden')
 }
 // 右键菜单功能相关
 const showForm = (type: AppFormEnum) => {
@@ -207,35 +217,17 @@ const ParseJsonArray = (json: string | null | undefined): any[] | null => {
     return JSON.parse(json)
 }
 
-// // 动态组件的名称
-// const dynamicComponentName = ref('PlayingListForm');
-// // 通过异步加载组件
-// const loadComponent = async () => {
-//     try {
-//      // @vite-ignore
-//     const component = await import(`/src/components/${dynamicComponentName.value}.vue`);
-//     return component.default;
-//   } catch (error) {
-//     console.error(error);
-//     return null;
-//   }
-// };
-// // 根据外部传递的组件名称加载对应的组件
-// const dynamicComponent = computed(() => {
-//   return loadComponent();
-// });
-
 </script>
 
 <template>
     <div v-if="isLogin" style="height: 100%;">
         <div class="main-background">
             <div class="main-background-style-box">
-                <img class="main-background-img img-fill" :src="backgroundUrl">
+                <img class="main-background-img img-file-top" :src="backgroundUrl">
             </div>
         </div>
         <div class="content" @contextmenu.prevent="showMenu($event)">
-            <div v-show="menuisShow" :style="{ top: `${menuTop}px`, left: `${menuLeft}px` }" class="menu">
+            <div ref="menuHtml" v-show="true" class="menu hidden">
                 <div @click="showForm(AppFormEnum.PlayingListForm)">播放列表</div>
                 <div @click="showForm(AppFormEnum.SearchSongForm)">歌曲列表</div>
                 <div @click="showForm(AppFormEnum.AddSongForm)">上传歌曲</div>
@@ -278,16 +270,15 @@ const ParseJsonArray = (json: string | null | undefined): any[] | null => {
                 <!-- 歌词区域 -->
                 <div class="lyric">
                     <ul class="lyric-item-box">
-                        <li :data-time="item.time" v-for="item in lyricList" :key="item.time"
-                        class="lyric-row"
-                        >{{ item.words }}</li>
+                        <li :data-time="item.time" v-for="item in lyricList" :key="item.time" class="lyric-row">{{
+                            item.words }}</li>
                     </ul>
                 </div>
             </div>
-            <template v-for="component in formStore.componentList" :key="component.id">
-                <component :is="component.component" :id="component.id"></component>
+            <template v-for="component in formStore.componentList" :key="component.id" >
+                <component :is="component.comobj" :id="component.id"></component>
             </template>
-            <!-- <component :is="dynamicComponent"></component> -->
+            <!-- <component :is="loadcomobj"></component> -->
         </div>
         <TeBar />
     </div>
@@ -295,8 +286,7 @@ const ParseJsonArray = (json: string | null | undefined): any[] | null => {
 </template>
 
 <style scoped>
-
-.lyric-row{
+.lyric-row {
     color: aliceblue;
 }
 
@@ -434,6 +424,11 @@ const ParseJsonArray = (json: string | null | undefined): any[] | null => {
     /* 图片在容器中居中显示 */
 }
 
+.img-file-top{
+    object-fit: cover;
+    object-position: top;
+}
+
 .menu {
     position: absolute;
     background-color: #6f6b6f;
@@ -485,7 +480,7 @@ const ParseJsonArray = (json: string | null | undefined): any[] | null => {
 .main-background-style-box {
     width: 100%;
     height: 100%;
-    filter: blur(30px);
+    filter: blur(35px) brightness(0.72);
 }
 
 .main-background-img {

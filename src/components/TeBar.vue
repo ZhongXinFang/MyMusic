@@ -128,9 +128,15 @@ const IoVolumeMouseleavetEvent = () => {
 // 弹出播放列表
 const showPlayingList = () => {
   const form = formStore.FindFormByType(AppFormEnum.PlayingListForm)
-  if (form === null)
-    return
-  formStore.Toggle(form.id)
+    if (form === null) {
+        formStore.CreateCom(AppFormEnum.PlayingListForm)
+        return
+    }
+    formStore.Toggle(form.id)
+  // const form = formStore.FindFormByType(AppFormEnum.PlayingListForm)
+  // if (form === null)
+  //   return
+  // formStore.Toggle(form.id)
 }
 
 // 当前播放百分比

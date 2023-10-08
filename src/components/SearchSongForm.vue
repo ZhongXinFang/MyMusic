@@ -1,5 +1,5 @@
 <template>
-    <div ref="form" class="from window open-closed" @mousedown="formStore.BringToTop(formData.id)">
+    <div ref="form" class="from window" @mousedown="formStore.BringToTop(formData.id)">
         <div class="from-head">
             <div class="from-head-left">
                 <span class="from-head-left-text">歌曲列表</span>
@@ -19,34 +19,41 @@
         </div>
         <div class="from-body">
             <div class="search-box">
-                <Input search enter-button placeholder="输入歌曲名称" @on-search="Search" />
+                <!-- <Input v-model="searchString" search enter-button placeholder="输入歌曲名称" @on-search="Search" /> -->
+                <el-input v-model="searchString" placeholder="输入歌曲名称" class="input-with-select">
+                    <template #append>
+                        <el-button @click="Search" type="primary" plain>搜索</el-button>
+                    </template>
+                </el-input>
             </div>
             <div class="res-box">
                 <ul>
                     <li v-for="item in searchResult.Data" :title="item.Title">
                         <span class="li-img">
-                            <img :src="base + '/SongFile/' +ParseJsonArray(item.Backgroundimgjson)[0]" alt="">
+                            <img :src="base + '/SongFile/' + ParseJsonArray(item.Backgroundimgjson)[0]" alt="">
                         </span>
                         <span>
                         </span>
-                        <span class="li-title">{{ item.Title }}<span class="li-po">{{ item.ArtistName}}</span></span>
+                        <span class="li-title">{{ item.Title }}<span class="li-po">{{ item.ArtistName }}</span></span>
                         <div class="io">
                             <span class="add-list">
-                                <img title="添加到播放列表" 
-                                @click="AddSongToList(item)"
-                                class="io-play" src="@/assets/icon/增加添加加号.svg" alt="">
+                                <img title="添加到播放列表" @click="AddSongToList(item)" class="io-play"
+                                    src="@/assets/icon/增加添加加号.svg" alt="">
                             </span>
                             <span>
-                                <img title="立即播放" 
-                                @click="PlaySong(item)"
-                                class="io-play" src="@/assets/icon/播放.svg" alt="">
+                                <img title="立即播放" @click="PlaySong(item)" class="io-play" src="@/assets/icon/播放.svg" alt="">
                             </span>
                         </div>
                         <!-- <span class="li-time">04:05</span> -->
                     </li>
                 </ul>
                 <div class="page" v-show="searchResult.Count > 0">
-                    <Page v-show="searchResult.TotalPage > 1" :model-value="currentPage" :total="searchResult.Count" :page-size="pageSize" simple size="small" />
+                    <!-- <Page v-show="searchResult.TotalPage > 1" :model-value="currentPage" :total="searchResult.Count"
+                        :page-size="pageSize" simple size="small" /> -->
+                    <el-pagination small background layout="prev, pager, next" 
+                    :default-page-size="pageSize" :current-page="currentPage"
+                    :hide-on-single-page="searchResult.TotalPage > 1"
+                    :total="searchResult.Count" class="mt-4" />
                 </div>
             </div>
         </div>
@@ -78,7 +85,7 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 // 搜索结果对象
 const searchResult = ref<SearchSongListReqDto<SongReqDto>>(new SearchSongListReqDto<SongReqDto>())
-    
+
 const Search = async () => {
     const req = new SearchReqDto()
     if (!searchString.value || searchString.value === '')
@@ -100,8 +107,7 @@ const AddSongToList = (song: SongReqDto) => {
 const PlaySong = (song: SongReqDto) => {
     if (songStore.hasSong(song.Id))
         songStore.play(song.Id)
-    else
-    {
+    else {
         songStore.AddSong(song)
         songStore.play(song.Id)
     }
@@ -153,6 +159,7 @@ onMounted(() => {
     formData.value.showClose = false
 
     formStore.AddForm(formData.value)
+    formData.value.isShow = true
 
     Search()
 

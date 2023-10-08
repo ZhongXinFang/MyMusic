@@ -1,7 +1,10 @@
+declare const apiUrlBase: string;
+declare const urlBase: string;
+
 import axios, { AxiosResponse } from 'axios';
 import { emitter } from '@/mitt/mitt.ts';
-const apiBaseURL = 'https://localhost:7111/api';
-const baseURL = 'https://localhost:7111';
+const apiBaseURL =  apiUrlBase ??  'https://localhost:5001/api';
+const baseURL = urlBase ?? 'https://localhost:5001';
 
 
 const instance = axios.create({

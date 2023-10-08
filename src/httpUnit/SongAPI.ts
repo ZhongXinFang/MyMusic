@@ -32,6 +32,7 @@ export const AddArtist = async (data: ArtistResDto): Promise<ArtistReqDto | null
 
 // 添加一首歌曲
 export const AddSong = async (data: AddSongReqDto): Promise<AddSongResDto | null> => {
+    if(!data) return null
     const res: any = await apiBase.post('/Song', data)
     if (res?.status !== 200)
         return null
@@ -40,6 +41,7 @@ export const AddSong = async (data: AddSongReqDto): Promise<AddSongResDto | null
 
 // 搜索歌曲
 export const SearchSong = async (data: SearchReqDto): Promise<SearchSongListReqDto<SongReqDto> | null> => {
+    if(!data) return null
     const querStr: string = qs.stringify(data);
     const res: any = await apiBase.get('/Song?' + querStr)
     if (res?.status !== 200)
@@ -52,6 +54,7 @@ export const SearchSong = async (data: SearchReqDto): Promise<SearchSongListReqD
 
 // 获取指定歌曲的信息
 export const GetSong = async (id: string): Promise<SongReqDto | null> => {
+    if(!id || id === '') return null
     const res: any = await apiBase.get('/Song/' + id)
     if (res?.status !== 200)
         return null
@@ -69,6 +72,7 @@ export const GetStaticFileRUrl = async (filename: string): Promise<string | null
 
 // 获取歌词文件
 export const GetLyricFileRUrl = async (filename: string): Promise<LyricModel[] | null> => {
+    if(!filename || filename === '') return null
     const res = await apiBase(base + '/SongFile/' + filename,{
         responseType: 'arraybuffer'
     })

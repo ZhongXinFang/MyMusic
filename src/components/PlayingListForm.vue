@@ -1,11 +1,11 @@
 <template>
-    <div ref="draggableRef" class="from window closed open-closed" @mousedown="formStore.BringToTop(formData.id)">
+    <div ref="draggableRef" class="from window" @mousedown="formStore.BringToTop(formData.id)">
         <div class="from-head">
             <div class="from-head-left">
                 <span class="from-head-left-text">播放列表</span>
             </div>
             <div class="from-head-right">
-                <button @click="formData.isShow = false" title="隐藏窗口" class="from-head-io-button"
+                <button @click="hiddenForm" title="隐藏窗口" class="from-head-io-button"
                     v-show="formData.showMinimize">
                     <img src="@/assets/icon/最小化.svg" alt="">
                 </button>
@@ -30,7 +30,7 @@
                         <img :src="base + '/SongFile/' + ParseJsonArray(item.Backgroundimgjson)?.[0]" alt="">
                         <div v-show="songStore.currentUserSongIndex === index " class="li-img-playing">
                             <svg width="30" height="10" viewBox="0 0 50 10" style="margin-left: 8px;">
-                                <g transform="translate(50%, 50%)">
+                                <g transform="translate(5,5)">
                                     <rect class="svg-item" id="r1" x="5" y="0" width="4" height="10" />
                                     <rect class="svg-item" id="r2" x="10" y="0" width="4" height="10" />
                                     <rect class="svg-item" id="r3" x="15" y="0" width="4" height="10" />
@@ -66,23 +66,29 @@ const formStore = useFormStore()
 let formData = ref(new FormDataModel(AppFormEnum.PlayingListForm, false, 'id?temp=1'))
 // 窗口显示相关
 watch(() => formData.value.isShow, (newvalue) => {
+    console.log('PlayingListForm isShow', newvalue)
     const html = draggableRef.value
     if (!html)
         return
     if (newvalue === true)
     {
         teBarStore.isShow = true
+        html.classList.add('show')
         html.classList.remove('closed')
         html.classList.remove('open-closed')
-        html.classList.add('show')
     }
     else
     {
         teBarStore.isShow = false
-        html.classList.remove('show')
         html.classList.add('closed')
+        html.classList.remove('show')
     }
 })
+
+const hiddenForm = () => {
+    console.log('hiddenForm', formData.value.isShow);
+    formData.value.isShow = false
+}
 
 watch(() => formData.value.zIndex, (newValue) =>
 {
@@ -105,12 +111,14 @@ const dragMoveListener = (event: any) => {
 }
 
 onMounted(() => {
-    formStore.AddForm(formData.value)
+    console.log('PlayingListForm mounted')
+
     formData.value.showMinimize = true
     formData.value.showMaximize = false
     formData.value.showClose = false
-
-    teBarStore.isShow = true
+    
+    formStore.AddForm(formData.value)
+    formData.value.isShow = true
 
     // 计算窗口显示位置
     // 获取当前窗口的宽高

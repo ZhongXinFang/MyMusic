@@ -235,7 +235,7 @@ const LoginByVerificationCode = async () => {
     req.Email = LoginByVerificationCodeObj.value.Email
     req.VerificationCode = LoginByVerificationCodeObj.value.VerificationCode
     const res = await LoginByCode(req)
-    if (res instanceof LoginResDto){
+    if (res instanceof LoginResDto) {
         window.location.reload()
     }
     else

@@ -1,5 +1,5 @@
 <template>
-    <div ref="form" class="from window open-closed" @mousedown="formStore.BringToTop(formData.id)">
+    <div ref="form" class="from window" @mousedown="formStore.BringToTop(formData.id)">
         <div class="from-head">
             <div class="from-head-left">
                 <span class="from-head-left-text">上传歌曲</span>
@@ -184,11 +184,14 @@ const UpFielBefore = (rawFile: any, type: UpSuccessTypeEnum) => {
 
 // 窗口显示相关
 watch(() => formData.value.isShow, (newvalue) => {
+    console.log('isshow',newvalue);
     const html = form.value
     if (!html)
         return
     if (newvalue === true) {
         html.classList.remove('closed')
+        console.log(111);
+        
         html.classList.remove('open-closed')
         html.classList.add('show')
     }
@@ -222,7 +225,9 @@ onMounted(async () => {
     formData.value.showClose = true
 
     formStore.AddForm(formData.value)
-    formData.value.isShow = false
+    console.log('AddSongFormOnMounted', formData.value.id);
+    
+    formData.value.isShow = true
     interact(form.value!)
         .resizable({
             // 可以从所有边缘和角落进行调整大小
